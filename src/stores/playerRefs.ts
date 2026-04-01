@@ -15,4 +15,5 @@ export const playerRefs = {
   rideLookAt: new THREE.Vector3(),
   mountRide: null as (() => void) | null,
   dismountRide: null as (() => void) | null,
+  hideOnRide: true,
 }

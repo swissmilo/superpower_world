@@ -108,8 +108,8 @@ export function Player() {
       playerRefs.position.set(pos.x, pos.y, pos.z)
       setIsMoving(false)
 
-      // Hide character while riding
-      if (characterRef.current) characterRef.current.visible = false
+      // Hide character while riding (unless hideOnRide is false)
+      if (characterRef.current && playerRefs.hideOnRide) characterRef.current.visible = false
       return
     }
 

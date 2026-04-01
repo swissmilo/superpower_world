@@ -4,6 +4,7 @@ import { useRef, useState, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Billboard, Text, Sparkles } from '@react-three/drei'
 import * as THREE from 'three'
+import { RigidBody } from '@react-three/rapier'
 import { playerRefs } from '@/stores/playerRefs'
 import { useGameStore } from '@/stores/gameStore'
 
@@ -152,32 +153,15 @@ export function ObstacleCourse({ worldOffset = [0, 0, 0] }: { worldOffset?: [num
         elapsedRef.current = 0
         celebrationTimerRef.current = 0
         displayTimeRef.current = '0.0'
+
+        // Clear ride prompt so Space works as jump during the course
+        playerRefs.nearRide = null
+        playerRefs.mountRide = null
       }
       playerRefs.dismountRide = null
     } else if (playerRefs.nearRide === RIDE_ID && !courseActive) {
       playerRefs.nearRide = null
       playerRefs.mountRide = null
-    }
-
-    // Allow restart when near start during active course
-    if (courseActive && !completed && distToStart < MOUNT_RANGE && !playerRefs.isOnRide) {
-      playerRefs.nearRide = RIDE_ID
-      playerRefs.mountRide = () => {
-        // Restart: teleport back to start
-        playerRefs.isOnRide = true
-        playerRefs.currentRide = RIDE_ID
-        playerRefs.ridePosition.set(
-          startWorldPos.x,
-          startWorldPos.y + 1,
-          startWorldPos.z
-        )
-        setTimeout(() => {
-          playerRefs.isOnRide = false
-          playerRefs.currentRide = null
-        }, 50)
-        elapsedRef.current = 0
-        displayTimeRef.current = '0.0'
-      }
     }
 
     // Track course progress
@@ -237,18 +221,19 @@ export function ObstacleCourse({ worldOffset = [0, 0, 0] }: { worldOffset?: [num
 
         return (
           <group key={`plat-${plat.index}`}>
-            <mesh
-              position={plat.position}
-              castShadow
-              receiveShadow
-              ref={plat.isMoving ? (el) => {
-                if (el) movingPlatformRefs.current.set(plat.index, el)
-                else movingPlatformRefs.current.delete(plat.index)
-              } : undefined}
-            >
-              <boxGeometry args={[2, 0.4, 2]} />
-              <meshStandardMaterial color={color} />
-            </mesh>
+            <RigidBody type="fixed" position={plat.position} colliders="cuboid">
+              <mesh
+                castShadow
+                receiveShadow
+                ref={plat.isMoving ? (el) => {
+                  if (el) movingPlatformRefs.current.set(plat.index, el)
+                  else movingPlatformRefs.current.delete(plat.index)
+                } : undefined}
+              >
+                <boxGeometry args={[2, 0.4, 2]} />
+                <meshStandardMaterial color={color} />
+              </mesh>
+            </RigidBody>
             <PlatformMarkers position={plat.position} />
           </group>
         )

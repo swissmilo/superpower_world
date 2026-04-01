@@ -92,6 +92,7 @@ export function GrapplingTower({ worldOffset = [0, 0, 0] }: { worldOffset?: [num
       playerRefs.mountRide = () => {
         playerRefs.isOnRide = true
         playerRefs.currentRide = RIDE_ID
+        playerRefs.hideOnRide = false
         setClimbing(true)
         climbStateRef.current = {
           currentPlatform: -1, // start below first platform
@@ -104,6 +105,7 @@ export function GrapplingTower({ worldOffset = [0, 0, 0] }: { worldOffset?: [num
         playerRefs.isOnRide = false
         playerRefs.currentRide = null
         playerRefs.nearRide = null
+        playerRefs.hideOnRide = true
         setClimbing(false)
         setCelebrating(false)
         climbStateRef.current.currentPlatform = -1
@@ -137,6 +139,7 @@ export function GrapplingTower({ worldOffset = [0, 0, 0] }: { worldOffset?: [num
           playerRefs.isOnRide = false
           playerRefs.currentRide = null
           playerRefs.nearRide = null
+          playerRefs.hideOnRide = true
           // Set ride position to base so player lands near base
           playerRefs.ridePosition.set(worldOffset[0], worldOffset[1] + 1, worldOffset[2])
           setClimbing(false)

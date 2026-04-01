@@ -25,8 +25,8 @@ interface AxeProjectile {
 
 const TARGET_POSITIONS: [number, number, number][] = [
   [0, 2, -10],
-  [0, 2, -15],
-  [0, 2, -20],
+  [-1.5, 2, -15],
+  [1.5, 2, -20],
 ]
 
 // Trajectory arc preview positions (parabolic path from z=0 toward z=-15)
@@ -39,7 +39,7 @@ function getArcPosition(t: number, spread: number): THREE.Vector3 {
 
 function TargetBoard({ position }: { position: [number, number, number] }) {
   return (
-    <group position={position}>
+    <group position={position} rotation={[Math.PI / 2, 0, 0]}>
       {/* A-frame stand - left leg */}
       <mesh position={[-0.5, -1, 0.2]} rotation={[0.1, 0, 0.15]} castShadow>
         <cylinderGeometry args={[0.06, 0.06, 2.2, 6]} />
