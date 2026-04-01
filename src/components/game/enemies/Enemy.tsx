@@ -104,25 +104,33 @@ export function Enemy({ def, spawnPosition, onDeath }: EnemyProps) {
       return
     }
 
-    // Don't enter the amusement park zone (centered at [200, 200], radius 40)
-    const parkDx = pos.x - 200
-    const parkDz = pos.z - 200
-    const distToPark = Math.sqrt(parkDx * parkDx + parkDz * parkDz)
-    if (distToPark < 40) {
-      const vel = rigidBodyRef.current.linvel()
-      const pushX = (parkDx / distToPark) * def.speed * 2
-      const pushZ = (parkDz / distToPark) * def.speed * 2
-      rigidBodyRef.current.setLinvel({ x: pushX, y: vel.y, z: pushZ }, true)
-      setState('idle')
-      patrolWaitTimer.current = 2
-      return
+    // Don't enter safe zones (amusement park + ninja facility)
+    const safeZones = [
+      { x: 200, z: 200, r: 40 },
+      { x: -200, z: -200, r: 40 },
+    ]
+    for (const zone of safeZones) {
+      const zdx = pos.x - zone.x
+      const zdz = pos.z - zone.z
+      const distToZone = Math.sqrt(zdx * zdx + zdz * zdz)
+      if (distToZone < zone.r) {
+        const vel = rigidBodyRef.current.linvel()
+        const pushX = (zdx / distToZone) * def.speed * 2
+        const pushZ = (zdz / distToZone) * def.speed * 2
+        rigidBodyRef.current.setLinvel({ x: pushX, y: vel.y, z: pushZ }, true)
+        setState('idle')
+        patrolWaitTimer.current = 2
+        return
+      }
     }
 
-    // Don't chase player into the park
-    const playerInPark = Math.sqrt((playerPos.x - 200) ** 2 + (playerPos.z - 200) ** 2) < 40
+    // Don't chase player into safe zones
+    const playerInSafeZone = safeZones.some((zone) =>
+      Math.sqrt((playerPos.x - zone.x) ** 2 + (playerPos.z - zone.z) ** 2) < zone.r
+    )
 
     // State transitions
-    if (playerInPark) {
+    if (playerInSafeZone) {
       if (state === 'chase' || state === 'attack') {
         setState('idle')
         patrolWaitTimer.current = 2

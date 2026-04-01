@@ -9,6 +9,7 @@ import { BossManager } from './enemies/BossManager'
 import { CaptureZone } from './CaptureZone'
 import { AimIndicator } from './AimIndicator'
 import { AmusementPark } from './AmusementPark'
+import { NinjaFacility } from './NinjaFacility'
 
 export function Scene() {
   return (
@@ -63,6 +64,11 @@ export function Scene() {
       {/* Amusement Park */}
       <group position={[200, 0, 200]}>
         <AmusementPark />
+      </group>
+
+      {/* Ninja Training Facility */}
+      <group position={[-200, 0, -200]}>
+        <NinjaFacility />
       </group>
     </>
   )

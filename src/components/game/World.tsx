@@ -3,11 +3,21 @@
 import { RigidBody, CuboidCollider } from '@react-three/rapier'
 import { useMemo } from 'react'
 
-// Helper to check if a point is inside the amusement park zone
+// Helper to check if a point is inside a special zone
 function inParkZone(x: number, z: number): boolean {
   const dx = x - 200
   const dz = z - 200
   return Math.sqrt(dx * dx + dz * dz) < 45
+}
+
+function inNinjaZone(x: number, z: number): boolean {
+  const dx = x - (-200)
+  const dz = z - (-200)
+  return Math.sqrt(dx * dx + dz * dz) < 40
+}
+
+function inAnySpecialZone(x: number, z: number): boolean {
+  return inParkZone(x, z) || inNinjaZone(x, z)
 }
 
 function Tree({ position }: { position: [number, number, number] }) {
@@ -70,7 +80,7 @@ export function World() {
       const x = (Math.random() - 0.5) * 900
       const z = (Math.random() - 0.5) * 900
       // Keep trees away from spawn area and amusement park
-      if ((Math.abs(x) > 15 || Math.abs(z) > 15) && !inParkZone(x, z)) {
+      if ((Math.abs(x) > 15 || Math.abs(z) > 15) && !inAnySpecialZone(x, z)) {
         positions.push([x, 0, z])
       }
     }
@@ -82,7 +92,7 @@ export function World() {
     for (let i = 0; i < 150; i++) {
       const x = (Math.random() - 0.5) * 800
       const z = (Math.random() - 0.5) * 800
-      if ((Math.abs(x) > 10 || Math.abs(z) > 10) && !inParkZone(x, z)) {
+      if ((Math.abs(x) > 10 || Math.abs(z) > 10) && !inAnySpecialZone(x, z)) {
         positions.push({ pos: [x, 0.3, z], scale: 0.5 + Math.random() * 1.5 })
       }
     }
@@ -94,7 +104,7 @@ export function World() {
     for (let i = 0; i < 400; i++) {
       const x = (Math.random() - 0.5) * 800
       const z = (Math.random() - 0.5) * 800
-      if (!inParkZone(x, z)) {
+      if (!inAnySpecialZone(x, z)) {
         positions.push([x, 0, z])
       }
     }
@@ -158,8 +168,13 @@ export function World() {
         <planeGeometry args={[4, 50]} />
         <meshStandardMaterial color="#C4A76C" />
       </mesh>
-      {/* Path toward amusement park */}
+      {/* Path toward amusement park (northeast) */}
       <mesh rotation={[-Math.PI / 2, Math.PI / 4, 0]} position={[100, 0.01, 100]}>
+        <planeGeometry args={[4, 200]} />
+        <meshStandardMaterial color="#C4A76C" />
+      </mesh>
+      {/* Path toward ninja facility (southwest) */}
+      <mesh rotation={[-Math.PI / 2, Math.PI / 4, 0]} position={[-100, 0.01, -100]}>
         <planeGeometry args={[4, 200]} />
         <meshStandardMaterial color="#C4A76C" />
       </mesh>
