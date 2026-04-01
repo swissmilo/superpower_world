@@ -8,7 +8,7 @@ import { Boss } from './Boss'
 
 const BOSS_SPAWN_INTERVAL = 120
 const BOSS_WARNING_DURATION = 3
-const BOSS_SPAWN_POSITION: [number, number, number] = [0, 2, -20]
+const BOSS_SPAWN_POSITION: [number, number, number] = [0, 2, -80]
 
 export function BossManager() {
   const [isBossActive, setIsBossActive] = useState(false)

@@ -45,25 +45,40 @@ export const ENEMY_TYPES: Record<string, EnemyDef> = {
   },
 }
 
-// Spawn points around the map
+// Spawn points spread across the 1000x1000 world
 export const SPAWN_POINTS: { position: [number, number, number]; type: string }[] = [
-  // Slimes - closer to spawn, easier
-  { position: [15, 1, 5], type: 'slime' },
-  { position: [-15, 1, 5], type: 'slime' },
-  { position: [10, 1, -15], type: 'slime' },
-  { position: [-10, 1, -10], type: 'slime' },
-  { position: [20, 1, 15], type: 'slime' },
-  { position: [-20, 1, 15], type: 'slime' },
+  // Slimes - near spawn, easy area
+  { position: [30, 1, 20], type: 'slime' },
+  { position: [-30, 1, 20], type: 'slime' },
+  { position: [20, 1, -30], type: 'slime' },
+  { position: [-20, 1, -25], type: 'slime' },
+  { position: [40, 1, 40], type: 'slime' },
+  { position: [-40, 1, 40], type: 'slime' },
+  // Slimes - scattered mid
+  { position: [100, 1, 50], type: 'slime' },
+  { position: [-100, 1, 50], type: 'slime' },
+  { position: [50, 1, -100], type: 'slime' },
+  { position: [-60, 1, -80], type: 'slime' },
 
   // Golems - mid range
-  { position: [30, 1, 0], type: 'golem' },
-  { position: [-30, 1, 0], type: 'golem' },
-  { position: [0, 1, -30], type: 'golem' },
-  { position: [25, 1, -25], type: 'golem' },
+  { position: [150, 1, 0], type: 'golem' },
+  { position: [-150, 1, 0], type: 'golem' },
+  { position: [0, 1, -150], type: 'golem' },
+  { position: [120, 1, -120], type: 'golem' },
+  { position: [-120, 1, 100], type: 'golem' },
+  { position: [200, 1, -100], type: 'golem' },
+
+  // Golems - near amusement park
+  { position: [160, 1, 180], type: 'golem' },
+  { position: [250, 1, 160], type: 'golem' },
 
   // Elementals - far out, fast and dangerous
-  { position: [35, 1, 20], type: 'elemental' },
-  { position: [-35, 1, -20], type: 'elemental' },
-  { position: [20, 1, -35], type: 'elemental' },
-  { position: [-25, 1, 30], type: 'elemental' },
+  { position: [300, 1, 100], type: 'elemental' },
+  { position: [-300, 1, -100], type: 'elemental' },
+  { position: [100, 1, -300], type: 'elemental' },
+  { position: [-200, 1, 250], type: 'elemental' },
+  { position: [350, 1, -200], type: 'elemental' },
+  { position: [-250, 1, -300], type: 'elemental' },
+  { position: [250, 1, 300], type: 'elemental' },
+  { position: [-350, 1, 150], type: 'elemental' },
 ]

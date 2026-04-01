@@ -255,9 +255,9 @@ export const useGameStore = create<GameState>()((set, get) => ({
 
   respawn: () => {
     const maxHp = get().getEffectiveMaxHealth()
-    // Random spawn position away from enemies (near map edges)
+    // Random spawn position away from enemies
     const angle = Math.random() * Math.PI * 2
-    const dist = 8 + Math.random() * 10
+    const dist = 30 + Math.random() * 50
     const spawnPos: [number, number, number] = [
       Math.cos(angle) * dist,
       3,

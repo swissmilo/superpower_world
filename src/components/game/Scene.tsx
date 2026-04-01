@@ -8,6 +8,7 @@ import { EnemyManager } from './enemies/EnemyManager'
 import { BossManager } from './enemies/BossManager'
 import { CaptureZone } from './CaptureZone'
 import { AimIndicator } from './AimIndicator'
+import { AmusementPark } from './AmusementPark'
 
 export function Scene() {
   return (
@@ -20,11 +21,11 @@ export function Scene() {
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
-        shadow-camera-far={150}
-        shadow-camera-left={-60}
-        shadow-camera-right={60}
-        shadow-camera-top={60}
-        shadow-camera-bottom={-60}
+        shadow-camera-far={500}
+        shadow-camera-left={-200}
+        shadow-camera-right={200}
+        shadow-camera-top={200}
+        shadow-camera-bottom={-200}
       />
 
       {/* Sky */}
@@ -36,7 +37,7 @@ export function Scene() {
       />
 
       {/* Fog for atmosphere */}
-      <fog attach="fog" args={['#87CEEB', 40, 120]} />
+      <fog attach="fog" args={['#87CEEB', 100, 600]} />
 
       {/* World environment */}
       <World />
@@ -58,6 +59,11 @@ export function Scene() {
 
       {/* Aim indicator */}
       <AimIndicator />
+
+      {/* Amusement Park */}
+      <group position={[200, 0, 200]}>
+        <AmusementPark />
+      </group>
     </>
   )
 }
