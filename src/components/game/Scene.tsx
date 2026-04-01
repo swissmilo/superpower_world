@@ -4,6 +4,7 @@ import { Sky } from '@react-three/drei'
 import { Player } from './Player'
 import { World } from './World'
 import { PowerManager } from './powers/PowerManager'
+import { EnemyManager } from './enemies/EnemyManager'
 
 export function Scene() {
   return (
@@ -42,6 +43,9 @@ export function Scene() {
 
       {/* Powers */}
       <PowerManager />
+
+      {/* Enemies */}
+      <EnemyManager />
     </>
   )
 }

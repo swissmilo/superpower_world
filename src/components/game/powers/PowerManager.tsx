@@ -22,6 +22,7 @@ interface ActiveEffect {
   color: string
   secondaryColor: string
   particleColor: string
+  damage: number
 }
 
 let nextEffectId = 0
@@ -85,6 +86,7 @@ export function PowerManager() {
             color: element.color,
             secondaryColor: element.secondaryColor,
             particleColor: element.particleColor,
+            damage: ability.damage,
           }
 
           setEffects((prev) => [...prev, newEffect])
@@ -111,6 +113,7 @@ export function PowerManager() {
                 direction={effect.direction}
                 color={effect.color}
                 secondaryColor={effect.secondaryColor}
+                damage={effect.damage}
                 onExpire={() => removeEffect(effect.id)}
               />
             )
@@ -120,6 +123,7 @@ export function PowerManager() {
                 key={effect.id}
                 position={effect.position}
                 color={effect.color}
+                damage={effect.damage}
                 onExpire={() => removeEffect(effect.id)}
               />
             )
