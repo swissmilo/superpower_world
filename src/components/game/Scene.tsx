@@ -5,6 +5,8 @@ import { Player } from './Player'
 import { World } from './World'
 import { PowerManager } from './powers/PowerManager'
 import { EnemyManager } from './enemies/EnemyManager'
+import { BossManager } from './enemies/BossManager'
+import { CaptureZone } from './CaptureZone'
 
 export function Scene() {
   return (
@@ -46,6 +48,12 @@ export function Scene() {
 
       {/* Enemies */}
       <EnemyManager />
+
+      {/* Boss */}
+      <BossManager />
+
+      {/* Capture Zone */}
+      <CaptureZone />
     </>
   )
 }

@@ -40,7 +40,9 @@ export function Enemy({ def, spawnPosition, onDeath }: EnemyProps) {
         const newHealth = prev - amount
         if (newHealth <= 0) {
           setState('dead')
-          useGameStore.getState().addCurrency(def.currencyDrop)
+          const store = useGameStore.getState()
+          store.addCurrency(def.currencyDrop)
+          store.incrementKills()
           enemyRegistry.unregister(enemyId.current)
         }
         return Math.max(0, newHealth)

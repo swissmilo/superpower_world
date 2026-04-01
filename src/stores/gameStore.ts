@@ -12,12 +12,32 @@ interface GameState {
   playerMaxHealth: number
   playerElement: ElementType | null
   currency: number
+  enemiesKilled: number
 
   // Upgrades
   upgradeLevels: Record<string, number>
   unlockedElements: ElementType[]
   showShop: boolean
   toggleShop: () => void
+
+  // Rebirth
+  rebirthCount: number
+  totalLifetimeCurrency: number
+  getRebirthMultiplier: () => number
+  performRebirth: () => boolean
+
+  // Boss
+  isBossActive: boolean
+  bossHealth: number
+  bossMaxHealth: number
+  bossWarning: string
+  setBossState: (active: boolean, health?: number, maxHealth?: number) => void
+  setBossWarning: (warning: string) => void
+
+  // Capture Zone
+  captureZoneState: 'neutral' | 'capturing' | 'captured'
+  captureProgress: number
+  setCaptureZone: (state: 'neutral' | 'capturing' | 'captured', progress: number) => void
 
   // Actions
   setPlayerElement: (element: ElementType) => void
@@ -27,6 +47,8 @@ interface GameState {
   purchaseUpgrade: (upgradeId: string) => boolean
   unlockElement: (element: ElementType) => boolean
   resetGame: () => void
+  respawn: () => void
+  incrementKills: () => void
 
   // Computed helpers
   getDamageMultiplier: () => number
@@ -53,6 +75,8 @@ interface SaveData {
   currency: number
   upgradeLevels: Record<string, number>
   unlockedElements: ElementType[]
+  rebirthCount: number
+  totalLifetimeCurrency: number
 }
 
 export const useGameStore = create<GameState>()((set, get) => ({
@@ -63,15 +87,65 @@ export const useGameStore = create<GameState>()((set, get) => ({
   playerMaxHealth: INITIAL_HEALTH,
   playerElement: null,
   currency: 0,
+  enemiesKilled: 0,
 
   upgradeLevels: {},
   unlockedElements: [],
   showShop: false,
   toggleShop: () => set((s) => ({ showShop: !s.showShop })),
 
+  // Rebirth
+  rebirthCount: 0,
+  totalLifetimeCurrency: 0,
+
+  getRebirthMultiplier: () => {
+    return 1 + 0.25 * get().rebirthCount
+  },
+
+  performRebirth: () => {
+    const { rebirthCount, currency } = get()
+    const cost = Math.floor(10000 * Math.pow(2, rebirthCount))
+    if (currency < cost) return false
+
+    const newCount = rebirthCount + 1
+    set({
+      rebirthCount: newCount,
+      currency: 0,
+      upgradeLevels: {},
+      unlockedElements: [],
+      playerElement: null,
+      phase: 'menu',
+      playerHealth: INITIAL_HEALTH,
+      playerMaxHealth: INITIAL_HEALTH,
+      abilityCooldowns: [0, 0, 0],
+      showShop: false,
+      enemiesKilled: 0,
+    })
+    get().saveGame()
+    return true
+  },
+
+  // Boss
+  isBossActive: false,
+  bossHealth: 0,
+  bossMaxHealth: 0,
+  bossWarning: '',
+  setBossState: (active, health, maxHealth) => {
+    set({
+      isBossActive: active,
+      ...(health !== undefined && { bossHealth: health }),
+      ...(maxHealth !== undefined && { bossMaxHealth: maxHealth }),
+    })
+  },
+  setBossWarning: (warning) => set({ bossWarning: warning }),
+
+  // Capture Zone
+  captureZoneState: 'neutral',
+  captureProgress: 0,
+  setCaptureZone: (state, progress) => set({ captureZoneState: state, captureProgress: progress }),
+
   setPlayerElement: (element) => {
     const { unlockedElements } = get()
-    // Auto-unlock the first chosen element
     const newUnlocked = unlockedElements.includes(element)
       ? unlockedElements
       : [...unlockedElements, element]
@@ -80,7 +154,6 @@ export const useGameStore = create<GameState>()((set, get) => ({
       phase: 'playing',
       unlockedElements: newUnlocked,
     })
-    // Recalculate max health with upgrades
     const maxHp = get().getEffectiveMaxHealth()
     set({ playerHealth: maxHp, playerMaxHealth: maxHp })
   },
@@ -101,8 +174,12 @@ export const useGameStore = create<GameState>()((set, get) => ({
 
   addCurrency: (amount) => {
     const multiplier = get().getCurrencyMultiplier()
-    const boosted = Math.floor(amount * multiplier)
-    set((state) => ({ currency: state.currency + boosted }))
+    const rebirthMult = get().getRebirthMultiplier()
+    const boosted = Math.floor(amount * multiplier * rebirthMult)
+    set((state) => ({
+      currency: state.currency + boosted,
+      totalLifetimeCurrency: state.totalLifetimeCurrency + boosted,
+    }))
   },
 
   purchaseUpgrade: (upgradeId) => {
@@ -119,7 +196,6 @@ export const useGameStore = create<GameState>()((set, get) => ({
     const newLevels = { ...upgradeLevels, [upgradeId]: currentLevel + 1 }
     set({ currency: currency - cost, upgradeLevels: newLevels })
 
-    // If max health upgraded, update current and max health
     if (upgradeId === 'max_health') {
       const maxHp = INITIAL_HEALTH + getUpgradeEffect(upgrade, currentLevel + 1)
       set((s) => ({
@@ -148,8 +224,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
   },
 
   resetGame: () => {
-    const { upgradeLevels, unlockedElements, currency } = get()
-    // Keep persistent data, reset session state
+    const { upgradeLevels } = get()
     const maxHp = INITIAL_HEALTH + getUpgradeEffect(
       UPGRADES.find((u) => u.id === 'max_health')!,
       upgradeLevels['max_health'] ?? 0
@@ -161,14 +236,31 @@ export const useGameStore = create<GameState>()((set, get) => ({
       playerElement: null,
       abilityCooldowns: [0, 0, 0],
       showShop: false,
-      // Keep: currency, upgradeLevels, unlockedElements
+      enemiesKilled: 0,
+      isBossActive: false,
+      bossWarning: '',
+      captureZoneState: 'neutral',
+      captureProgress: 0,
     })
   },
+
+  respawn: () => {
+    const maxHp = get().getEffectiveMaxHealth()
+    set({
+      phase: 'playing',
+      playerHealth: maxHp,
+      playerMaxHealth: maxHp,
+      abilityCooldowns: [0, 0, 0],
+    })
+  },
+
+  incrementKills: () => set((s) => ({ enemiesKilled: s.enemiesKilled + 1 })),
 
   // Computed helpers
   getDamageMultiplier: () => {
     const level = get().upgradeLevels['power_damage'] ?? 0
-    return 1 + (level * 10) / 100
+    const rebirthMult = get().getRebirthMultiplier()
+    return (1 + (level * 10) / 100) * rebirthMult
   },
 
   getSpeedMultiplier: () => {
@@ -188,12 +280,13 @@ export const useGameStore = create<GameState>()((set, get) => ({
 
   getEffectiveMaxHealth: () => {
     const level = get().upgradeLevels['max_health'] ?? 0
-    return INITIAL_HEALTH + level * 20
+    const rebirthMult = get().getRebirthMultiplier()
+    return Math.floor((INITIAL_HEALTH + level * 20) * rebirthMult)
   },
 
   getNextElementCost: () => {
     const unlocked = get().unlockedElements.length
-    const costIndex = Math.max(0, unlocked - 1) // First is free
+    const costIndex = Math.max(0, unlocked - 1)
     return EXTRA_ELEMENT_COSTS[costIndex] ?? 99999
   },
 
@@ -214,8 +307,8 @@ export const useGameStore = create<GameState>()((set, get) => ({
   },
 
   saveGame: () => {
-    const { currency, upgradeLevels, unlockedElements } = get()
-    const data: SaveData = { currency, upgradeLevels, unlockedElements }
+    const { currency, upgradeLevels, unlockedElements, rebirthCount, totalLifetimeCurrency } = get()
+    const data: SaveData = { currency, upgradeLevels, unlockedElements, rebirthCount, totalLifetimeCurrency }
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify(data))
     } catch {
@@ -230,12 +323,14 @@ export const useGameStore = create<GameState>()((set, get) => ({
       const data: SaveData = JSON.parse(raw)
       const maxHp = INITIAL_HEALTH + getUpgradeEffect(
         UPGRADES.find((u) => u.id === 'max_health')!,
-        data.upgradeLevels['max_health'] ?? 0
+        data.upgradeLevels?.['max_health'] ?? 0
       )
       set({
         currency: data.currency ?? 0,
         upgradeLevels: data.upgradeLevels ?? {},
         unlockedElements: data.unlockedElements ?? [],
+        rebirthCount: data.rebirthCount ?? 0,
+        totalLifetimeCurrency: data.totalLifetimeCurrency ?? 0,
         playerMaxHealth: maxHp,
         playerHealth: maxHp,
       })
