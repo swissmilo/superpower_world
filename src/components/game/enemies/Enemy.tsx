@@ -104,8 +104,32 @@ export function Enemy({ def, spawnPosition, onDeath }: EnemyProps) {
       return
     }
 
+    // Don't enter the amusement park zone (centered at [200, 200], radius 40)
+    const parkDx = pos.x - 200
+    const parkDz = pos.z - 200
+    const distToPark = Math.sqrt(parkDx * parkDx + parkDz * parkDz)
+    if (distToPark < 40) {
+      const vel = rigidBodyRef.current.linvel()
+      const pushX = (parkDx / distToPark) * def.speed * 2
+      const pushZ = (parkDz / distToPark) * def.speed * 2
+      rigidBodyRef.current.setLinvel({ x: pushX, y: vel.y, z: pushZ }, true)
+      setState('idle')
+      patrolWaitTimer.current = 2
+      return
+    }
+
+    // Don't chase player into the park
+    const playerInPark = Math.sqrt((playerPos.x - 200) ** 2 + (playerPos.z - 200) ** 2) < 40
+
     // State transitions
-    if (distToPlayer < def.attackRange && state !== 'attack') {
+    if (playerInPark) {
+      if (state === 'chase' || state === 'attack') {
+        setState('idle')
+        patrolWaitTimer.current = 2
+        const vel = rigidBodyRef.current.linvel()
+        rigidBodyRef.current.setLinvel({ x: 0, y: vel.y, z: 0 }, true)
+      }
+    } else if (distToPlayer < def.attackRange && state !== 'attack') {
       setState('attack')
     } else if (distToPlayer < def.detectionRange && state !== 'chase' && distToPlayer >= def.attackRange) {
       setState('chase')
