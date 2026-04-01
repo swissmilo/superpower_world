@@ -31,9 +31,9 @@ export function Player() {
   const isGrounded = useRef(true)
   const regenAccum = useRef(0)
   const [isMoving, setIsMoving] = useState(false)
-  const [isRiding, setIsRiding] = useState(false)
   const characterRef = useRef<THREE.Group>(null)
   const prevJump = useRef(false)
+  const dismountCooldown = useRef(0)
 
   const [, getKeys] = useKeyboardControls<Controls>()
   const playerElement = useGameStore((s) => s.playerElement)
@@ -55,8 +55,12 @@ export function Player() {
       if (playerRefs.isOnRide) {
         playerRefs.isOnRide = false
         playerRefs.currentRide = null
-        setIsRiding(false)
       }
+    }
+
+    // Tick dismount cooldown (prevents immediate re-mount)
+    if (dismountCooldown.current > 0) {
+      dismountCooldown.current -= delta
     }
 
     const keys = getKeys()
@@ -64,7 +68,7 @@ export function Player() {
     prevJump.current = keys.jump
 
     // Ride mount/dismount on Space press
-    if (jumpJustPressed) {
+    if (jumpJustPressed && dismountCooldown.current <= 0) {
       if (playerRefs.isOnRide) {
         // Dismount
         if (playerRefs.dismountRide) {
@@ -74,18 +78,20 @@ export function Player() {
         playerRefs.currentRide = null
         playerRefs.mountRide = null
         playerRefs.dismountRide = null
-        setIsRiding(false)
-        // Teleport player near ride exit
+        playerRefs.nearRide = null
+        dismountCooldown.current = 1.0 // 1 second cooldown before can remount
+        // Teleport player away from ride
         const rp = playerRefs.ridePosition
-        rigidBodyRef.current.setTranslation({ x: rp.x + 2, y: rp.y + 1, z: rp.z + 2 }, true)
+        rigidBodyRef.current.setTranslation({ x: rp.x + 3, y: rp.y + 1.5, z: rp.z + 3 }, true)
         rigidBodyRef.current.setLinvel({ x: 0, y: 0, z: 0 }, true)
+        // Update position refs immediately
+        const pos = rigidBodyRef.current.translation()
+        playerPositionRef.current.set(pos.x, pos.y, pos.z)
+        playerRefs.position.set(pos.x, pos.y, pos.z)
         return
       } else if (playerRefs.nearRide && playerRefs.mountRide) {
         // Mount
-        playerRefs.isOnRide = true
-        playerRefs.currentRide = playerRefs.nearRide
         playerRefs.mountRide()
-        setIsRiding(true)
         return
       }
     }
@@ -101,7 +107,15 @@ export function Player() {
       playerPositionRef.current.set(pos.x, pos.y, pos.z)
       playerRefs.position.set(pos.x, pos.y, pos.z)
       setIsMoving(false)
+
+      // Hide character while riding
+      if (characterRef.current) characterRef.current.visible = false
       return
+    }
+
+    // Show character when not riding
+    if (characterRef.current && !characterRef.current.visible) {
+      characterRef.current.visible = true
     }
 
     const velocity = rigidBodyRef.current.linvel()
@@ -204,8 +218,8 @@ export function Player() {
         mass={1}
         linearDamping={0.5}
       >
-        <CapsuleCollider args={[0.35, 0.3]} position={[0, 0.65, 0]} />
-        <group ref={characterRef} visible={!isRiding}>
+        <CapsuleCollider args={[0.35, 0.3]} position={[0, 0.75, 0]} />
+        <group ref={characterRef}>
           <CharacterModel elementColor={color} isMoving={isMoving} />
         </group>
       </RigidBody>

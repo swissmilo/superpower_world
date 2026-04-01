@@ -1,6 +1,6 @@
 'use client'
 
-import { RigidBody } from '@react-three/rapier'
+import { RigidBody, CuboidCollider } from '@react-three/rapier'
 import { useMemo } from 'react'
 
 // Helper to check if a point is inside the amusement park zone
@@ -13,7 +13,8 @@ function inParkZone(x: number, z: number): boolean {
 function Tree({ position }: { position: [number, number, number] }) {
   const scale = 0.8 + Math.random() * 0.6
   return (
-    <group position={position}>
+    <RigidBody type="fixed" position={position} colliders={false}>
+      <CuboidCollider args={[0.15 * scale, scale * 0.8, 0.15 * scale]} position={[0, scale * 0.8, 0]} />
       {/* Trunk */}
       <mesh position={[0, scale * 0.8, 0]} castShadow>
         <cylinderGeometry args={[0.12 * scale, 0.18 * scale, scale * 1.6, 8]} />
@@ -29,7 +30,7 @@ function Tree({ position }: { position: [number, number, number] }) {
         <coneGeometry args={[scale * 0.6, scale * 1.0, 8]} />
         <meshStandardMaterial color="#3CA63C" />
       </mesh>
-    </group>
+    </RigidBody>
   )
 }
 
