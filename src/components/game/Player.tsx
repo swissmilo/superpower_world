@@ -9,6 +9,7 @@ import { Controls } from '@/hooks/useKeyboard'
 import { CharacterModel } from './CharacterModel'
 import { ThirdPersonCamera } from './ThirdPersonCamera'
 import { useGameStore } from '@/stores/gameStore'
+import { playerRefs } from '@/stores/playerRefs'
 
 const MOVE_SPEED = 6
 const JUMP_VELOCITY = 8
@@ -68,12 +69,13 @@ export function Player() {
       moveDirection.normalize()
     }
 
-    // Apply horizontal velocity
+    // Apply horizontal velocity (with speed multiplier from powers)
+    const speed = MOVE_SPEED * playerRefs.speedMultiplier
     rigidBodyRef.current.setLinvel(
       {
-        x: moveDirection.x * MOVE_SPEED,
+        x: moveDirection.x * speed,
         y: velocity.y,
-        z: moveDirection.z * MOVE_SPEED,
+        z: moveDirection.z * speed,
       },
       true
     )
@@ -92,9 +94,11 @@ export function Player() {
       isGrounded.current = true
     }
 
-    // Update player position ref for camera
+    // Update player position ref for camera and shared refs for powers
     const pos = rigidBodyRef.current.translation()
     playerPositionRef.current.set(pos.x, pos.y, pos.z)
+    playerRefs.position.set(pos.x, pos.y, pos.z)
+    playerRefs.azimuth = azimuthRef.current
 
     // Rotate character model to face movement direction
     if (moving && characterRef.current) {

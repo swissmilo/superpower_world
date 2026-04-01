@@ -3,6 +3,7 @@
 import { Sky } from '@react-three/drei'
 import { Player } from './Player'
 import { World } from './World'
+import { PowerManager } from './powers/PowerManager'
 
 export function Scene() {
   return (
@@ -38,6 +39,9 @@ export function Scene() {
 
       {/* Player */}
       <Player />
+
+      {/* Powers */}
+      <PowerManager />
     </>
   )
 }
