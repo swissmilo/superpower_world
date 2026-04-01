@@ -38,7 +38,7 @@ export function PowerManager() {
 
   useFrame((_, delta) => {
     const store = useGameStore.getState()
-    if (store.phase !== 'playing' || !store.playerElement) return
+    if (store.phase !== 'playing' || !store.playerElement || store.isPaused()) return
 
     // Tick cooldowns
     store.tickCooldowns(delta)

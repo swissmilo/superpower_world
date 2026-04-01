@@ -19,7 +19,7 @@ interface ProjectileProps {
 
 const MAX_LIFETIME = 2.5
 const DEFAULT_SPEED = 25
-const HIT_RADIUS = 1.2
+const HIT_RADIUS = 2.5
 
 export function Projectile({
   position,

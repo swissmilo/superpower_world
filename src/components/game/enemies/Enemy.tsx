@@ -63,6 +63,7 @@ export function Enemy({ def, spawnPosition, onDeath }: EnemyProps) {
 
   useFrame((_, delta) => {
     if (!rigidBodyRef.current) return
+    if (useGameStore.getState().isPaused()) return
 
     const pos = rigidBodyRef.current.translation()
     enemyPos.current.set(pos.x, pos.y, pos.z)
@@ -70,7 +71,7 @@ export function Enemy({ def, spawnPosition, onDeath }: EnemyProps) {
 
     const playerPos = playerRefs.position
     const distToPlayer = Math.sqrt(
-      (pos.x - playerPos.x) ** 2 + (pos.z - playerPos.z) ** 2
+      (pos.x - playerPos.x) ** 2 + (pos.y - playerPos.y) ** 2 + (pos.z - playerPos.z) ** 2
     )
 
     hitFlash.current = Math.max(0, hitFlash.current - delta)

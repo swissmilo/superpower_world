@@ -60,7 +60,7 @@ function GameCanvas() {
         camera={{ fov: 60, near: 0.1, far: 200 }}
       >
         <Suspense fallback={null}>
-          <Physics gravity={[0, -20, 0]} colliders={false}>
+          <Physics gravity={[0, -20, 0]} colliders={false} paused={phase !== 'playing' || showShop}>
             <Scene />
           </Physics>
         </Suspense>

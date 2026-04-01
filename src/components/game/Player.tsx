@@ -29,6 +29,7 @@ export function Player() {
   const playerPositionRef = useRef(new THREE.Vector3(...PLAYER_SPAWN))
   const azimuthRef = useRef(0)
   const isGrounded = useRef(true)
+  const regenAccum = useRef(0)
   const [isMoving, setIsMoving] = useState(false)
   const characterRef = useRef<THREE.Group>(null)
 
@@ -39,6 +40,17 @@ export function Player() {
 
   useFrame((_, delta) => {
     if (!rigidBodyRef.current) return
+
+    // Check for respawn teleport
+    const respawnPos = useGameStore.getState().respawnPosition
+    if (respawnPos) {
+      rigidBodyRef.current.setTranslation(
+        { x: respawnPos[0], y: respawnPos[1], z: respawnPos[2] },
+        true
+      )
+      rigidBodyRef.current.setLinvel({ x: 0, y: 0, z: 0 }, true)
+      useGameStore.setState({ respawnPosition: null })
+    }
 
     const keys = getKeys()
     const velocity = rigidBodyRef.current.linvel()
@@ -93,6 +105,17 @@ export function Player() {
     // Check if grounded (simple y-velocity check)
     if (Math.abs(velocity.y) < 0.1) {
       isGrounded.current = true
+    }
+
+    // Health regeneration (2 HP per second)
+    const store = useGameStore.getState()
+    if (store.playerHealth < store.playerMaxHealth && store.phase === 'playing') {
+      regenAccum.current += 2 * delta
+      if (regenAccum.current >= 1) {
+        const amount = Math.floor(regenAccum.current)
+        store.heal(amount)
+        regenAccum.current -= amount
+      }
     }
 
     // Update player position ref for camera and shared refs for powers

@@ -19,6 +19,7 @@ interface GameState {
   unlockedElements: ElementType[]
   showShop: boolean
   toggleShop: () => void
+  isPaused: () => boolean
 
   // Rebirth
   rebirthCount: number
@@ -47,6 +48,7 @@ interface GameState {
   purchaseUpgrade: (upgradeId: string) => boolean
   unlockElement: (element: ElementType) => boolean
   resetGame: () => void
+  respawnPosition: [number, number, number] | null
   respawn: () => void
   incrementKills: () => void
 
@@ -93,6 +95,11 @@ export const useGameStore = create<GameState>()((set, get) => ({
   unlockedElements: [],
   showShop: false,
   toggleShop: () => set((s) => ({ showShop: !s.showShop })),
+
+  isPaused: () => {
+    const s = get()
+    return s.phase !== 'playing' || s.showShop
+  },
 
   // Rebirth
   rebirthCount: 0,
@@ -244,13 +251,24 @@ export const useGameStore = create<GameState>()((set, get) => ({
     })
   },
 
+  respawnPosition: null as [number, number, number] | null,
+
   respawn: () => {
     const maxHp = get().getEffectiveMaxHealth()
+    // Random spawn position away from enemies (near map edges)
+    const angle = Math.random() * Math.PI * 2
+    const dist = 8 + Math.random() * 10
+    const spawnPos: [number, number, number] = [
+      Math.cos(angle) * dist,
+      3,
+      Math.sin(angle) * dist,
+    ]
     set({
       phase: 'playing',
       playerHealth: maxHp,
       playerMaxHealth: maxHp,
       abilityCooldowns: [0, 0, 0],
+      respawnPosition: spawnPos,
     })
   },
 

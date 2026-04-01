@@ -7,6 +7,7 @@ import { PowerManager } from './powers/PowerManager'
 import { EnemyManager } from './enemies/EnemyManager'
 import { BossManager } from './enemies/BossManager'
 import { CaptureZone } from './CaptureZone'
+import { AimIndicator } from './AimIndicator'
 
 export function Scene() {
   return (
@@ -54,6 +55,9 @@ export function Scene() {
 
       {/* Capture Zone */}
       <CaptureZone />
+
+      {/* Aim indicator */}
+      <AimIndicator />
     </>
   )
 }
