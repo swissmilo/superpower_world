@@ -6,15 +6,19 @@ import { Physics } from '@react-three/rapier'
 import { Suspense } from 'react'
 import { useKeyboardMap } from '@/hooks/useKeyboard'
 import { usePointerLock } from '@/hooks/usePointerLock'
+import { useGameStore } from '@/stores/gameStore'
 import { Scene } from './Scene'
+import { ElementSelector } from '@/components/ui/ElementSelector'
+import { HUD } from '@/components/ui/HUD'
 
 function GameCanvas() {
   const { requestLock } = usePointerLock()
+  const phase = useGameStore((s) => s.phase)
 
   return (
     <div
       style={{ width: '100vw', height: '100vh' }}
-      onClick={requestLock}
+      onClick={phase === 'playing' ? requestLock : undefined}
     >
       <Canvas
         shadows
@@ -26,6 +30,10 @@ function GameCanvas() {
           </Physics>
         </Suspense>
       </Canvas>
+
+      {/* UI Overlays */}
+      {phase === 'menu' && <ElementSelector />}
+      {phase === 'playing' && <HUD />}
     </div>
   )
 }
