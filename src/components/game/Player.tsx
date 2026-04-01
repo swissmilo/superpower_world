@@ -219,7 +219,7 @@ export function Player() {
         linearDamping={0.5}
       >
         <CapsuleCollider args={[0.35, 0.3]} position={[0, 0.75, 0]} />
-        <group ref={characterRef}>
+        <group ref={characterRef} position={[0, 0.6, 0]}>
           <CharacterModel elementColor={color} isMoving={isMoving} />
         </group>
       </RigidBody>
