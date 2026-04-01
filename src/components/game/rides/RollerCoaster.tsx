@@ -2,13 +2,17 @@
 
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
+import { Billboard, Text } from '@react-three/drei'
 import * as THREE from 'three'
+import { playerRefs } from '@/stores/playerRefs'
 
+const RIDE_ID = 'roller_coaster'
 const TRACK_SPEED = 1 / 15 // full loop in ~15 seconds (t increments per second)
 const RAIL_OFFSET = 0.2 // distance between the two rails
 const TUBE_RADIUS = 0.15
 const SUPPORT_SPACING = 5
 const SUPPORT_RADIUS = 0.08
+const MOUNT_RANGE = 5
 
 function createTrackCurve(): THREE.CatmullRomCurve3 {
   const points = [
@@ -157,7 +161,7 @@ function SupportPillars({ curve }: { curve: THREE.CatmullRomCurve3 }) {
   )
 }
 
-function Cart({ curve }: { curve: THREE.CatmullRomCurve3 }) {
+function Cart({ curve, worldOffset }: { curve: THREE.CatmullRomCurve3; worldOffset: [number, number, number] }) {
   const cartRef = useRef<THREE.Group>(null)
   const tRef = useRef(0)
   const lookTarget = useMemo(() => new THREE.Vector3(), [])
@@ -175,6 +179,47 @@ function Cart({ curve }: { curve: THREE.CatmullRomCurve3 }) {
     // Orient cart along the track using tangent
     lookTarget.copy(point).add(tangent)
     cartRef.current.lookAt(lookTarget)
+
+    // Mount zone: near the station area (first point of the curve)
+    const stationPoint = curve.getPointAt(0)
+    const mountWorldX = worldOffset[0] + stationPoint.x
+    const mountWorldY = worldOffset[1] + stationPoint.y
+    const mountWorldZ = worldOffset[2] + stationPoint.z
+    const mountPoint = new THREE.Vector3(mountWorldX, mountWorldY, mountWorldZ)
+    const dist = playerRefs.position.distanceTo(mountPoint)
+
+    if (dist < MOUNT_RANGE && !playerRefs.isOnRide) {
+      playerRefs.nearRide = RIDE_ID
+      playerRefs.mountRide = () => {
+        playerRefs.isOnRide = true
+        playerRefs.currentRide = RIDE_ID
+      }
+      playerRefs.dismountRide = () => {
+        playerRefs.isOnRide = false
+        playerRefs.currentRide = null
+        playerRefs.nearRide = null
+      }
+    } else if (playerRefs.nearRide === RIDE_ID && !playerRefs.isOnRide) {
+      playerRefs.nearRide = null
+      playerRefs.mountRide = null
+    }
+
+    // Update ride position when riding (follow the cart)
+    if (playerRefs.isOnRide && playerRefs.currentRide === RIDE_ID) {
+      const rideX = worldOffset[0] + point.x
+      const rideY = worldOffset[1] + point.y + 0.5 // slightly above cart
+      const rideZ = worldOffset[2] + point.z
+      playerRefs.ridePosition.set(rideX, rideY, rideZ)
+
+      // Look ahead along the track
+      const lookAheadT = (tRef.current + 0.02) % 1
+      const lookAheadPoint = curve.getPointAt(lookAheadT)
+      playerRefs.rideLookAt.set(
+        worldOffset[0] + lookAheadPoint.x,
+        worldOffset[1] + lookAheadPoint.y + 1,
+        worldOffset[2] + lookAheadPoint.z
+      )
+    }
   })
 
   return (
@@ -202,14 +247,33 @@ function Cart({ curve }: { curve: THREE.CatmullRomCurve3 }) {
   )
 }
 
-export function RollerCoaster() {
+export function RollerCoaster({ worldOffset = [0, 0, 0] }: { worldOffset?: [number, number, number] }) {
   const curve = useMemo(() => createTrackCurve(), [])
+
+  // Station point for the "Press Space" indicator
+  const stationPoint = useMemo(() => curve.getPointAt(0), [curve])
 
   return (
     <group>
       <TrackRails curve={curve} />
       <SupportPillars curve={curve} />
-      <Cart curve={curve} />
+      <Cart curve={curve} worldOffset={worldOffset} />
+
+      {/* "Press Space" indicator near station */}
+      {playerRefs.nearRide === RIDE_ID && !playerRefs.isOnRide && (
+        <Billboard position={[stationPoint.x, stationPoint.y + 3, stationPoint.z]}>
+          <Text
+            fontSize={0.5}
+            color="white"
+            anchorX="center"
+            anchorY="middle"
+            outlineWidth={0.05}
+            outlineColor="#000000"
+          >
+            Press Space to Ride
+          </Text>
+        </Billboard>
+      )}
     </group>
   )
 }

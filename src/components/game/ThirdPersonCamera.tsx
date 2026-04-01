@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { usePointerLock } from '@/hooks/usePointerLock'
+import { playerRefs } from '@/stores/playerRefs'
 
 const CAMERA_DISTANCE_DEFAULT = 10
 const CAMERA_DISTANCE_MIN = 4
@@ -53,11 +54,16 @@ export function ThirdPersonCamera({ playerPositionRef, azimuthRef }: ThirdPerson
 
     const az = azimuthRef.current ?? 0
 
+    // When on a ride, follow ride position
+    const followPos = playerRefs.isOnRide
+      ? playerRefs.ridePosition
+      : playerPositionRef.current
+
     // Calculate target camera position using spherical coordinates
     const targetPos = new THREE.Vector3(
-      playerPositionRef.current.x + distance.current * Math.sin(polar.current) * Math.sin(az),
-      playerPositionRef.current.y + CAMERA_HEIGHT_OFFSET + distance.current * Math.cos(polar.current),
-      playerPositionRef.current.z + distance.current * Math.sin(polar.current) * Math.cos(az)
+      followPos.x + distance.current * Math.sin(polar.current) * Math.sin(az),
+      followPos.y + CAMERA_HEIGHT_OFFSET + distance.current * Math.cos(polar.current),
+      followPos.z + distance.current * Math.sin(polar.current) * Math.cos(az)
     )
 
     // Smooth camera follow
@@ -66,12 +72,10 @@ export function ThirdPersonCamera({ playerPositionRef, azimuthRef }: ThirdPerson
 
     camera.position.copy(currentPos.current)
 
-    // Look at player (slightly above feet)
-    const lookTarget = new THREE.Vector3(
-      playerPositionRef.current.x,
-      playerPositionRef.current.y + CAMERA_HEIGHT_OFFSET,
-      playerPositionRef.current.z
-    )
+    // Look at follow target (slightly above)
+    const lookTarget = playerRefs.isOnRide
+      ? playerRefs.rideLookAt.clone()
+      : new THREE.Vector3(followPos.x, followPos.y + CAMERA_HEIGHT_OFFSET, followPos.z)
     camera.lookAt(lookTarget)
   })
 

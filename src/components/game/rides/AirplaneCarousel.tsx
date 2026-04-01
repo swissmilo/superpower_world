@@ -2,8 +2,11 @@
 
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
+import { Billboard, Text } from '@react-three/drei'
 import * as THREE from 'three'
+import { playerRefs } from '@/stores/playerRefs'
 
+const RIDE_ID = 'airplane_carousel'
 const AIRPLANE_COLORS = ['#FF4444', '#4488FF', '#44CC44', '#FFAA00', '#CC44CC', '#44CCCC']
 const NUM_ARMS = 6
 const ARM_LENGTH = 5
@@ -11,6 +14,7 @@ const ARM_ANGLE = -0.15 // slight downward angle in radians
 const AIRPLANE_TILT = 0.26 // ~15 degrees outward tilt
 const ROTATION_SPEED = 0.5 // rad/s
 const CHAIN_LENGTH = 1.2
+const MOUNT_RANGE = 5
 
 function Airplane({ color }: { color: string }) {
   return (
@@ -44,8 +48,9 @@ function Airplane({ color }: { color: string }) {
   )
 }
 
-export function AirplaneCarousel() {
+export function AirplaneCarousel({ worldOffset = [0, 0, 0] }: { worldOffset?: [number, number, number] }) {
   const rotatingGroupRef = useRef<THREE.Group>(null)
+  const rotationAngleRef = useRef(0)
 
   const armData = useMemo(() => {
     return Array.from({ length: NUM_ARMS }, (_, i) => {
@@ -55,8 +60,54 @@ export function AirplaneCarousel() {
   }, [])
 
   useFrame((_, delta) => {
+    rotationAngleRef.current += ROTATION_SPEED * delta
+
     if (rotatingGroupRef.current) {
-      rotatingGroupRef.current.rotation.y += ROTATION_SPEED * delta
+      rotatingGroupRef.current.rotation.y = rotationAngleRef.current
+    }
+
+    // Mount zone check
+    const mountWorldX = worldOffset[0]
+    const mountWorldY = worldOffset[1]
+    const mountWorldZ = worldOffset[2]
+    const mountPoint = new THREE.Vector3(mountWorldX, mountWorldY, mountWorldZ)
+    const dist = playerRefs.position.distanceTo(mountPoint)
+
+    if (dist < MOUNT_RANGE && !playerRefs.isOnRide) {
+      playerRefs.nearRide = RIDE_ID
+      playerRefs.mountRide = () => {
+        playerRefs.isOnRide = true
+        playerRefs.currentRide = RIDE_ID
+      }
+      playerRefs.dismountRide = () => {
+        playerRefs.isOnRide = false
+        playerRefs.currentRide = null
+        playerRefs.nearRide = null
+      }
+    } else if (playerRefs.nearRide === RIDE_ID && !playerRefs.isOnRide) {
+      playerRefs.nearRide = null
+      playerRefs.mountRide = null
+    }
+
+    // Update ride position when riding (follow airplane #0)
+    if (playerRefs.isOnRide && playerRefs.currentRide === RIDE_ID) {
+      const arm0 = armData[0]
+      const currentAngle = arm0.angle + rotationAngleRef.current
+
+      // Arm tip position in local space (relative to rotating group at y=8.15)
+      const armTipX = Math.sin(currentAngle) * ARM_LENGTH
+      const armTipZ = Math.cos(currentAngle) * ARM_LENGTH
+      const armTipY = Math.sin(ARM_ANGLE) * ARM_LENGTH
+
+      // Airplane hangs below chain from arm tip
+      // Rotating group is at y=8.15 in the carousel's local space
+      const airplaneLocalY = 8.15 + armTipY - CHAIN_LENGTH
+
+      const rideX = worldOffset[0] + armTipX
+      const rideY = worldOffset[1] + airplaneLocalY
+      const rideZ = worldOffset[2] + armTipZ
+      playerRefs.ridePosition.set(rideX, rideY, rideZ)
+      playerRefs.rideLookAt.set(rideX, rideY + 2, rideZ)
     }
   })
 
@@ -141,6 +192,22 @@ export function AirplaneCarousel() {
           )
         })}
       </group>
+
+      {/* "Press Space" indicator */}
+      {playerRefs.nearRide === RIDE_ID && !playerRefs.isOnRide && (
+        <Billboard position={[0, 3, 0]}>
+          <Text
+            fontSize={0.5}
+            color="white"
+            anchorX="center"
+            anchorY="middle"
+            outlineWidth={0.05}
+            outlineColor="#000000"
+          >
+            Press Space to Ride
+          </Text>
+        </Billboard>
+      )}
     </group>
   )
 }

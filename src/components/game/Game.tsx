@@ -17,6 +17,7 @@ import { DeathScreen } from '@/components/ui/DeathScreen'
 import { BossHealthBar } from '@/components/ui/BossHealthBar'
 import { CaptureZoneIndicator } from '@/components/ui/CaptureZoneIndicator'
 import { TouchControls } from '@/components/ui/TouchControls'
+import { RidePrompt } from '@/components/ui/RidePrompt'
 
 function GameCanvas() {
   const { requestLock } = usePointerLock()
@@ -84,6 +85,7 @@ function GameCanvas() {
       {phase === 'gameover' && <DeathScreen />}
       <CurrencyPopup />
       <TouchControls />
+      {phase === 'playing' && <RidePrompt />}
     </div>
   )
 }

@@ -31,7 +31,9 @@ export function Player() {
   const isGrounded = useRef(true)
   const regenAccum = useRef(0)
   const [isMoving, setIsMoving] = useState(false)
+  const [isRiding, setIsRiding] = useState(false)
   const characterRef = useRef<THREE.Group>(null)
+  const prevJump = useRef(false)
 
   const [, getKeys] = useKeyboardControls<Controls>()
   const playerElement = useGameStore((s) => s.playerElement)
@@ -50,9 +52,58 @@ export function Player() {
       )
       rigidBodyRef.current.setLinvel({ x: 0, y: 0, z: 0 }, true)
       useGameStore.setState({ respawnPosition: null })
+      if (playerRefs.isOnRide) {
+        playerRefs.isOnRide = false
+        playerRefs.currentRide = null
+        setIsRiding(false)
+      }
     }
 
     const keys = getKeys()
+    const jumpJustPressed = keys.jump && !prevJump.current
+    prevJump.current = keys.jump
+
+    // Ride mount/dismount on Space press
+    if (jumpJustPressed) {
+      if (playerRefs.isOnRide) {
+        // Dismount
+        if (playerRefs.dismountRide) {
+          playerRefs.dismountRide()
+        }
+        playerRefs.isOnRide = false
+        playerRefs.currentRide = null
+        playerRefs.mountRide = null
+        playerRefs.dismountRide = null
+        setIsRiding(false)
+        // Teleport player near ride exit
+        const rp = playerRefs.ridePosition
+        rigidBodyRef.current.setTranslation({ x: rp.x + 2, y: rp.y + 1, z: rp.z + 2 }, true)
+        rigidBodyRef.current.setLinvel({ x: 0, y: 0, z: 0 }, true)
+        return
+      } else if (playerRefs.nearRide && playerRefs.mountRide) {
+        // Mount
+        playerRefs.isOnRide = true
+        playerRefs.currentRide = playerRefs.nearRide
+        playerRefs.mountRide()
+        setIsRiding(true)
+        return
+      }
+    }
+
+    // When on a ride: freeze player, follow ride position
+    if (playerRefs.isOnRide) {
+      rigidBodyRef.current.setLinvel({ x: 0, y: 0, z: 0 }, true)
+      rigidBodyRef.current.setTranslation(
+        { x: playerRefs.ridePosition.x, y: playerRefs.ridePosition.y, z: playerRefs.ridePosition.z },
+        true
+      )
+      const pos = rigidBodyRef.current.translation()
+      playerPositionRef.current.set(pos.x, pos.y, pos.z)
+      playerRefs.position.set(pos.x, pos.y, pos.z)
+      setIsMoving(false)
+      return
+    }
+
     const velocity = rigidBodyRef.current.linvel()
 
     // Calculate movement direction relative to camera azimuth
@@ -93,8 +144,8 @@ export function Player() {
       true
     )
 
-    // Jump
-    if (keys.jump && isGrounded.current) {
+    // Jump (only when not near a ride, so Space is used for ride mount)
+    if (keys.jump && isGrounded.current && !playerRefs.nearRide) {
       rigidBodyRef.current.setLinvel(
         { x: velocity.x, y: JUMP_VELOCITY, z: velocity.z },
         true
@@ -154,7 +205,7 @@ export function Player() {
         linearDamping={0.5}
       >
         <CapsuleCollider args={[0.35, 0.3]} position={[0, 0.65, 0]} />
-        <group ref={characterRef}>
+        <group ref={characterRef} visible={!isRiding}>
           <CharacterModel elementColor={color} isMoving={isMoving} />
         </group>
       </RigidBody>

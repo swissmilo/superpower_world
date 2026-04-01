@@ -3,12 +3,19 @@
 import { useMemo } from 'react'
 import { AirplaneCarousel } from './rides/AirplaneCarousel'
 import { RollerCoaster } from './rides/RollerCoaster'
+import { FerrisWheel } from './rides/FerrisWheel'
+import { MerryGoRound } from './rides/MerryGoRound'
+import { WaterSlide } from './rides/WaterSlide'
+import { Dropper } from './rides/Dropper'
 
 const FENCE_RADIUS = 33
 const FENCE_POST_SPACING = 5
 const FENCE_POST_HEIGHT = 1
 const FENCE_POST_RADIUS = 0.05
-const NUM_LAMP_POSTS = 6
+const NUM_LAMP_POSTS = 8
+
+// The park is placed at [200, 0, 200] in the scene — rides need this for mount zone checks
+const PARK_WORLD_OFFSET: [number, number, number] = [200, 0, 200]
 
 function FenceSection() {
   const { posts, rails } = useMemo(() => {
@@ -28,7 +35,6 @@ function FenceSection() {
       const z = Math.cos(angle) * FENCE_RADIUS
       postData.push({ position: [x, FENCE_POST_HEIGHT / 2, z], angle })
 
-      // Rail connecting this post to the next
       const nextAngle = ((i + 1) / numPosts) * Math.PI * 2
       const nextX = Math.sin(nextAngle) * FENCE_RADIUS
       const nextZ = Math.cos(nextAngle) * FENCE_RADIUS
@@ -76,12 +82,10 @@ function FenceSection() {
 function LampPost({ position }: { position: [number, number, number] }) {
   return (
     <group position={position}>
-      {/* Pole */}
       <mesh position={[0, 2, 0]} castShadow>
         <cylinderGeometry args={[0.06, 0.08, 4, 8]} />
         <meshStandardMaterial color="#333333" metalness={0.7} roughness={0.3} />
       </mesh>
-      {/* Lamp bulb */}
       <mesh position={[0, 4.2, 0]}>
         <sphereGeometry args={[0.25, 12, 12]} />
         <meshStandardMaterial
@@ -90,7 +94,6 @@ function LampPost({ position }: { position: [number, number, number] }) {
           emissiveIntensity={0.8}
         />
       </mesh>
-      {/* Lamp cap */}
       <mesh position={[0, 4.5, 0]}>
         <coneGeometry args={[0.35, 0.3, 8]} />
         <meshStandardMaterial color="#333333" metalness={0.6} roughness={0.4} />
@@ -102,22 +105,18 @@ function LampPost({ position }: { position: [number, number, number] }) {
 function EntryArch() {
   return (
     <group position={[0, 0, -FENCE_RADIUS + 1]}>
-      {/* Left pillar */}
       <mesh position={[-2.5, 2.5, 0]} castShadow>
         <cylinderGeometry args={[0.3, 0.35, 5, 12]} />
         <meshStandardMaterial color="#DD2222" />
       </mesh>
-      {/* Right pillar */}
       <mesh position={[2.5, 2.5, 0]} castShadow>
         <cylinderGeometry args={[0.3, 0.35, 5, 12]} />
         <meshStandardMaterial color="#DD2222" />
       </mesh>
-      {/* Horizontal beam on top */}
       <mesh position={[0, 5.2, 0]} castShadow>
         <boxGeometry args={[6, 0.6, 0.6]} />
         <meshStandardMaterial color="#FFCC00" />
       </mesh>
-      {/* Decorative top piece */}
       <mesh position={[0, 5.8, 0]}>
         <boxGeometry args={[4, 0.3, 0.3]} />
         <meshStandardMaterial color="#DD2222" />
@@ -141,6 +140,38 @@ export function AmusementPark() {
     return positions
   }, [])
 
+  // Each ride's local offset within the park + the park's world offset
+  const carouselOffset: [number, number, number] = [
+    PARK_WORLD_OFFSET[0] + (-10),
+    PARK_WORLD_OFFSET[1] + 0.15,
+    PARK_WORLD_OFFSET[2] + 0,
+  ]
+  const coasterOffset: [number, number, number] = [
+    PARK_WORLD_OFFSET[0] + 10,
+    PARK_WORLD_OFFSET[1] + 0.15,
+    PARK_WORLD_OFFSET[2] + 5,
+  ]
+  const ferrisOffset: [number, number, number] = [
+    PARK_WORLD_OFFSET[0] + 0,
+    PARK_WORLD_OFFSET[1] + 0.15,
+    PARK_WORLD_OFFSET[2] + 20,
+  ]
+  const merryOffset: [number, number, number] = [
+    PARK_WORLD_OFFSET[0] + (-22),
+    PARK_WORLD_OFFSET[1] + 0.15,
+    PARK_WORLD_OFFSET[2] + 15,
+  ]
+  const slideOffset: [number, number, number] = [
+    PARK_WORLD_OFFSET[0] + 18,
+    PARK_WORLD_OFFSET[1] + 0.15,
+    PARK_WORLD_OFFSET[2] + (-18),
+  ]
+  const dropperOffset: [number, number, number] = [
+    PARK_WORLD_OFFSET[0] + (-15),
+    PARK_WORLD_OFFSET[1] + 0.15,
+    PARK_WORLD_OFFSET[2] + (-18),
+  ]
+
   return (
     <group>
       {/* Ground platform */}
@@ -157,12 +188,32 @@ export function AmusementPark() {
 
       {/* Airplane Carousel */}
       <group position={[-10, 0.15, 0]}>
-        <AirplaneCarousel />
+        <AirplaneCarousel worldOffset={carouselOffset} />
       </group>
 
       {/* Roller Coaster */}
       <group position={[10, 0.15, 5]}>
-        <RollerCoaster />
+        <RollerCoaster worldOffset={coasterOffset} />
+      </group>
+
+      {/* Ferris Wheel */}
+      <group position={[0, 0.15, 20]}>
+        <FerrisWheel worldOffset={ferrisOffset} />
+      </group>
+
+      {/* Merry-Go-Round */}
+      <group position={[-22, 0.15, 15]}>
+        <MerryGoRound worldOffset={merryOffset} />
+      </group>
+
+      {/* Water Slide */}
+      <group position={[18, 0.15, -18]}>
+        <WaterSlide worldOffset={slideOffset} />
+      </group>
+
+      {/* Dropper */}
+      <group position={[-15, 0.15, -18]}>
+        <Dropper worldOffset={dropperOffset} />
       </group>
 
       {/* Lamp posts */}
