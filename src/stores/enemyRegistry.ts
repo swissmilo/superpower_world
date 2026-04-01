@@ -4,6 +4,7 @@ interface RegisteredEnemy {
   id: number
   position: THREE.Vector3
   takeDamage: (amount: number) => void
+  applySlow?: (multiplier: number, duration: number) => void
 }
 
 // Global registry for enemy positions and damage callbacks
@@ -11,8 +12,8 @@ interface RegisteredEnemy {
 class EnemyRegistry {
   private enemies = new Map<number, RegisteredEnemy>()
 
-  register(id: number, position: THREE.Vector3, takeDamage: (amount: number) => void) {
-    this.enemies.set(id, { id, position, takeDamage })
+  register(id: number, position: THREE.Vector3, takeDamage: (amount: number) => void, applySlow?: (multiplier: number, duration: number) => void) {
+    this.enemies.set(id, { id, position, takeDamage, applySlow })
   }
 
   unregister(id: number) {

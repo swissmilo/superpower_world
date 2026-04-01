@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { ElementType, GamePhase } from '@/types/game'
+import { SKILL_XP_THRESHOLDS, SKILL_MAX_LEVEL } from '@/types/game'
 import { UPGRADES, getUpgradeCost, getUpgradeEffect, EXTRA_ELEMENT_COSTS } from '@/lib/upgrades'
 
 interface GameState {
@@ -13,6 +14,20 @@ interface GameState {
   playerElement: ElementType | null
   currency: number
   enemiesKilled: number
+
+  // Multi-class: up to 3 active elements
+  activeElements: ElementType[]
+  setActiveElements: (elements: ElementType[]) => void
+  equipElement: (element: ElementType) => void
+  unequipElement: (element: ElementType) => void
+
+  // Skill levels & XP
+  skillLevels: Record<string, number>
+  skillXP: Record<string, number>
+  addSkillXP: (skillKey: string, xp: number) => void
+  getSkillLevel: (skillKey: string) => number
+  getSkillDamageMultiplier: (skillKey: string) => number
+  getSkillCooldownMultiplier: (skillKey: string) => number
 
   // Upgrades
   upgradeLevels: Record<string, number>
@@ -60,9 +75,9 @@ interface GameState {
   getEffectiveMaxHealth: () => number
   getNextElementCost: () => number
 
-  // Ability cooldowns (seconds remaining)
-  abilityCooldowns: [number, number, number]
-  startCooldown: (index: number, duration: number) => void
+  // Ability cooldowns (dynamic length: activeElements.length * 3)
+  abilityCooldowns: number[]
+  startCooldown: (index: number, duration: number, skillKey?: string) => void
   tickCooldowns: (delta: number) => void
 
   // Persistence
@@ -79,6 +94,9 @@ interface SaveData {
   unlockedElements: ElementType[]
   rebirthCount: number
   totalLifetimeCurrency: number
+  activeElements?: ElementType[]
+  skillLevels?: Record<string, number>
+  skillXP?: Record<string, number>
 }
 
 export const useGameStore = create<GameState>()((set, get) => ({
@@ -91,6 +109,87 @@ export const useGameStore = create<GameState>()((set, get) => ({
   currency: 0,
   enemiesKilled: 0,
 
+  // Multi-class
+  activeElements: [],
+
+  setActiveElements: (elements) => {
+    const { unlockedElements } = get()
+    const valid = elements.filter((e) => unlockedElements.includes(e)).slice(0, 3)
+    if (valid.length === 0) return
+    set({
+      activeElements: valid,
+      playerElement: valid[0],
+      abilityCooldowns: new Array(valid.length * 3).fill(0),
+    })
+    get().saveGame()
+  },
+
+  equipElement: (element) => {
+    const { activeElements, unlockedElements } = get()
+    if (!unlockedElements.includes(element)) return
+    if (activeElements.includes(element)) return
+    if (activeElements.length >= 3) return
+    const newActive = [...activeElements, element]
+    set({
+      activeElements: newActive,
+      abilityCooldowns: new Array(newActive.length * 3).fill(0),
+    })
+    get().saveGame()
+  },
+
+  unequipElement: (element) => {
+    const { activeElements } = get()
+    if (activeElements.length <= 1) return
+    const newActive = activeElements.filter((e) => e !== element)
+    set({
+      activeElements: newActive,
+      playerElement: newActive[0],
+      abilityCooldowns: new Array(newActive.length * 3).fill(0),
+    })
+    get().saveGame()
+  },
+
+  // Skill levels & XP
+  skillLevels: {},
+  skillXP: {},
+
+  addSkillXP: (skillKey, xp) => {
+    const { skillXP, skillLevels } = get()
+    const currentXP = (skillXP[skillKey] ?? 0) + xp
+    const currentLevel = skillLevels[skillKey] ?? 1
+
+    if (currentLevel >= SKILL_MAX_LEVEL) {
+      set({ skillXP: { ...skillXP, [skillKey]: currentXP } })
+      return
+    }
+
+    const threshold = SKILL_XP_THRESHOLDS[currentLevel - 1]
+    if (currentXP >= threshold) {
+      set({
+        skillXP: { ...skillXP, [skillKey]: currentXP },
+        skillLevels: { ...skillLevels, [skillKey]: currentLevel + 1 },
+      })
+      get().saveGame()
+    } else {
+      set({ skillXP: { ...skillXP, [skillKey]: currentXP } })
+    }
+  },
+
+  getSkillLevel: (skillKey) => {
+    return get().skillLevels[skillKey] ?? 1
+  },
+
+  getSkillDamageMultiplier: (skillKey) => {
+    const level = get().getSkillLevel(skillKey)
+    return 1 + 0.15 * (level - 1)
+  },
+
+  getSkillCooldownMultiplier: (skillKey) => {
+    const level = get().getSkillLevel(skillKey)
+    return 1 - 0.08 * (level - 1)
+  },
+
+  // Upgrades
   upgradeLevels: {},
   unlockedElements: [],
   showShop: false,
@@ -120,6 +219,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
       currency: 0,
       upgradeLevels: {},
       unlockedElements: [],
+      activeElements: [],
       playerElement: null,
       phase: 'menu',
       playerHealth: INITIAL_HEALTH,
@@ -127,6 +227,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
       abilityCooldowns: [0, 0, 0],
       showShop: false,
       enemiesKilled: 0,
+      // Keep skillLevels and skillXP across rebirths (mastery)
     })
     get().saveGame()
     return true
@@ -160,6 +261,8 @@ export const useGameStore = create<GameState>()((set, get) => ({
       playerElement: element,
       phase: 'playing',
       unlockedElements: newUnlocked,
+      activeElements: [element],
+      abilityCooldowns: [0, 0, 0],
     })
     const maxHp = get().getEffectiveMaxHealth()
     set({ playerHealth: maxHp, playerMaxHealth: maxHp })
@@ -241,6 +344,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
       playerHealth: maxHp,
       playerMaxHealth: maxHp,
       playerElement: null,
+      activeElements: [],
       abilityCooldowns: [0, 0, 0],
       showShop: false,
       enemiesKilled: 0,
@@ -255,7 +359,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
 
   respawn: () => {
     const maxHp = get().getEffectiveMaxHealth()
-    // Random spawn position away from enemies
+    const activeLen = get().activeElements.length || 1
     const angle = Math.random() * Math.PI * 2
     const dist = 30 + Math.random() * 50
     const spawnPos: [number, number, number] = [
@@ -267,7 +371,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
       phase: 'playing',
       playerHealth: maxHp,
       playerMaxHealth: maxHp,
-      abilityCooldowns: [0, 0, 0],
+      abilityCooldowns: new Array(activeLen * 3).fill(0),
       respawnPosition: spawnPos,
     })
   },
@@ -310,23 +414,24 @@ export const useGameStore = create<GameState>()((set, get) => ({
 
   abilityCooldowns: [0, 0, 0],
 
-  startCooldown: (index, duration) => {
-    const multiplier = get().getCooldownMultiplier()
-    const cooldowns = [...get().abilityCooldowns] as [number, number, number]
-    cooldowns[index] = duration * multiplier
+  startCooldown: (index, duration, skillKey) => {
+    const globalMult = get().getCooldownMultiplier()
+    const skillMult = skillKey ? get().getSkillCooldownMultiplier(skillKey) : 1
+    const cooldowns = [...get().abilityCooldowns]
+    cooldowns[index] = duration * globalMult * skillMult
     set({ abilityCooldowns: cooldowns })
   },
 
   tickCooldowns: (delta) => {
     const cooldowns = get().abilityCooldowns.map((cd) =>
       Math.max(0, cd - delta)
-    ) as [number, number, number]
+    )
     set({ abilityCooldowns: cooldowns })
   },
 
   saveGame: () => {
-    const { currency, upgradeLevels, unlockedElements, rebirthCount, totalLifetimeCurrency } = get()
-    const data: SaveData = { currency, upgradeLevels, unlockedElements, rebirthCount, totalLifetimeCurrency }
+    const { currency, upgradeLevels, unlockedElements, rebirthCount, totalLifetimeCurrency, activeElements, skillLevels, skillXP } = get()
+    const data: SaveData = { currency, upgradeLevels, unlockedElements, rebirthCount, totalLifetimeCurrency, activeElements, skillLevels, skillXP }
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify(data))
     } catch {
@@ -349,6 +454,9 @@ export const useGameStore = create<GameState>()((set, get) => ({
         unlockedElements: data.unlockedElements ?? [],
         rebirthCount: data.rebirthCount ?? 0,
         totalLifetimeCurrency: data.totalLifetimeCurrency ?? 0,
+        activeElements: data.activeElements ?? [],
+        skillLevels: data.skillLevels ?? {},
+        skillXP: data.skillXP ?? {},
         playerMaxHealth: maxHp,
         playerHealth: maxHp,
       })

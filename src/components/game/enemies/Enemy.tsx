@@ -33,6 +33,8 @@ export function Enemy({ def, spawnPosition, onDeath }: EnemyProps) {
   const patrolWaitTimer = useRef(2)
   const deathTimer = useRef(0)
   const hitFlash = useRef(0)
+  const slowMultiplier = useRef(1)
+  const slowTimer = useRef(0)
 
   const takeDamage = useCallback(
     (amount: number) => {
@@ -52,14 +54,19 @@ export function Enemy({ def, spawnPosition, onDeath }: EnemyProps) {
     [def.currencyDrop]
   )
 
+  const applySlow = useCallback((multiplier: number, duration: number) => {
+    slowMultiplier.current = multiplier
+    slowTimer.current = duration
+  }, [])
+
   // Register with enemy registry
   useEffect(() => {
     const id = enemyId.current
-    enemyRegistry.register(id, enemyPos.current, takeDamage)
+    enemyRegistry.register(id, enemyPos.current, takeDamage, applySlow)
     return () => {
       enemyRegistry.unregister(id)
     }
-  }, [takeDamage])
+  }, [takeDamage, applySlow])
 
   useFrame((_, delta) => {
     if (!rigidBodyRef.current) return
@@ -75,6 +82,14 @@ export function Enemy({ def, spawnPosition, onDeath }: EnemyProps) {
     )
 
     hitFlash.current = Math.max(0, hitFlash.current - delta)
+
+    // Tick slow timer
+    if (slowTimer.current > 0) {
+      slowTimer.current -= delta
+      if (slowTimer.current <= 0) {
+        slowMultiplier.current = 1
+      }
+    }
 
     // Dead state
     if (state === 'dead') {
@@ -136,8 +151,9 @@ export function Enemy({ def, spawnPosition, onDeath }: EnemyProps) {
         } else {
           const nx = dx / dist
           const nz = dz / dist
+          const spd = def.speed * slowMultiplier.current
           rigidBodyRef.current.setLinvel(
-            { x: nx * def.speed, y: velocity.y, z: nz * def.speed },
+            { x: nx * spd, y: velocity.y, z: nz * spd },
             true
           )
           setIsMoving(true)
@@ -155,8 +171,9 @@ export function Enemy({ def, spawnPosition, onDeath }: EnemyProps) {
         if (dist > 0.5) {
           const nx = dx / dist
           const nz = dz / dist
+          const spd = def.speed * 1.2 * slowMultiplier.current
           rigidBodyRef.current.setLinvel(
-            { x: nx * def.speed * 1.2, y: velocity.y, z: nz * def.speed * 1.2 },
+            { x: nx * spd, y: velocity.y, z: nz * spd },
             true
           )
           setIsMoving(true)
@@ -203,6 +220,7 @@ export function Enemy({ def, spawnPosition, onDeath }: EnemyProps) {
   })
 
   const healthPercent = health / def.health
+  const isFrozen = slowMultiplier.current < 1
 
   return (
     <RigidBody
@@ -222,8 +240,8 @@ export function Enemy({ def, spawnPosition, onDeath }: EnemyProps) {
       <group ref={groupRef}>
         <EnemyModel
           modelType={def.modelType}
-          color={hitFlash.current > 0 ? '#FFFFFF' : def.color}
-          bodyColor={hitFlash.current > 0 ? '#FFAAAA' : def.bodyColor}
+          color={isFrozen ? '#6699FF' : (hitFlash.current > 0 ? '#FFFFFF' : def.color)}
+          bodyColor={isFrozen ? '#4477DD' : (hitFlash.current > 0 ? '#FFAAAA' : def.bodyColor)}
           scale={def.scale}
           isMoving={isMoving}
         />

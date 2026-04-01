@@ -20,13 +20,17 @@ export function UpgradeShop() {
   const currency = useGameStore((s) => s.currency)
   const upgradeLevels = useGameStore((s) => s.upgradeLevels)
   const unlockedElements = useGameStore((s) => s.unlockedElements)
+  const activeElements = useGameStore((s) => s.activeElements)
   const purchaseUpgrade = useGameStore((s) => s.purchaseUpgrade)
   const unlockElement = useGameStore((s) => s.unlockElement)
+  const equipElement = useGameStore((s) => s.equipElement)
+  const unequipElement = useGameStore((s) => s.unequipElement)
   const toggleShop = useGameStore((s) => s.toggleShop)
   const getNextElementCost = useGameStore((s) => s.getNextElementCost)
 
   const nextElementCost = getNextElementCost()
   const lockedElements = ALL_ELEMENTS.filter((e) => !unlockedElements.includes(e))
+  const equippableElements = unlockedElements.filter((e) => !activeElements.includes(e))
 
   return (
     <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm pointer-events-auto">
@@ -48,7 +52,72 @@ export function UpgradeShop() {
           </div>
         </div>
 
+        {/* Active Loadout */}
+        <h3 className="text-lg font-bold text-white mb-3">Active Loadout</h3>
+        <div className="flex gap-2 mb-6">
+          {[0, 1, 2].map((slotIndex) => {
+            const elementType = activeElements[slotIndex]
+            if (elementType) {
+              const def = ELEMENTS[elementType]
+              return (
+                <div
+                  key={slotIndex}
+                  className="flex items-center gap-2 bg-gray-800 rounded-lg p-3 border-2 flex-1"
+                  style={{ borderColor: `${def.color}80` }}
+                >
+                  <span className="text-2xl">{ELEMENT_ICONS[elementType]}</span>
+                  <div className="flex-1">
+                    <span className="text-sm font-semibold" style={{ color: def.color }}>
+                      {def.name}
+                    </span>
+                    <p className="text-gray-500 text-[10px]">Keys {slotIndex * 3 + 1}-{slotIndex * 3 + 3}</p>
+                  </div>
+                  {activeElements.length > 1 && (
+                    <button
+                      onClick={() => unequipElement(elementType)}
+                      className="text-gray-500 hover:text-red-400 text-sm cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              )
+            }
+            return (
+              <div
+                key={slotIndex}
+                className="flex items-center justify-center bg-gray-800/50 rounded-lg p-3 border-2 border-dashed border-gray-700 flex-1"
+              >
+                <span className="text-gray-600 text-sm">Empty slot</span>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Equip unlocked elements */}
+        {equippableElements.length > 0 && activeElements.length < 3 && (
+          <div className="mb-6">
+            <p className="text-gray-400 text-sm mb-2">Equip an element:</p>
+            <div className="flex gap-2 flex-wrap">
+              {equippableElements.map((element) => {
+                const def = ELEMENTS[element]
+                return (
+                  <button
+                    key={element}
+                    onClick={() => equipElement(element)}
+                    className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 rounded-lg px-3 py-2 border border-gray-600 cursor-pointer transition-colors"
+                  >
+                    <span className="text-lg">{ELEMENT_ICONS[element]}</span>
+                    <span className="text-sm" style={{ color: def.color }}>{def.name}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Upgrades */}
+        <h3 className="text-lg font-bold text-white mb-3">Upgrades</h3>
         <div className="space-y-3 mb-6">
           {UPGRADES.map((upgrade) => {
             const level = upgradeLevels[upgrade.id] ?? 0
