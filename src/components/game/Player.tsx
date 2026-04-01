@@ -69,8 +69,9 @@ export function Player() {
       moveDirection.normalize()
     }
 
-    // Apply horizontal velocity (with speed multiplier from powers)
-    const speed = MOVE_SPEED * playerRefs.speedMultiplier
+    // Apply horizontal velocity (with speed multiplier from powers + upgrades)
+    const upgradeSpeed = useGameStore.getState().getSpeedMultiplier()
+    const speed = MOVE_SPEED * playerRefs.speedMultiplier * upgradeSpeed
     rigidBodyRef.current.setLinvel(
       {
         x: moveDirection.x * speed,

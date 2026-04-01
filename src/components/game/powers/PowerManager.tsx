@@ -86,7 +86,7 @@ export function PowerManager() {
             color: element.color,
             secondaryColor: element.secondaryColor,
             particleColor: element.particleColor,
-            damage: ability.damage,
+            damage: Math.floor(ability.damage * store.getDamageMultiplier()),
           }
 
           setEffects((prev) => [...prev, newEffect])

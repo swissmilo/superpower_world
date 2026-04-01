@@ -13,8 +13,15 @@ const ELEMENT_ICONS: Record<ElementType, string> = {
   nature: '🌿',
 }
 
+const ALL_ELEMENTS: ElementType[] = ['fire', 'water', 'ice', 'lightning', 'earth', 'nature']
+
 export function ElementSelector() {
   const setPlayerElement = useGameStore((s) => s.setPlayerElement)
+  const unlockedElements = useGameStore((s) => s.unlockedElements)
+  const currency = useGameStore((s) => s.currency)
+
+  // If no elements unlocked yet, show all (first pick is free)
+  const availableElements = unlockedElements.length > 0 ? unlockedElements : ALL_ELEMENTS
 
   return (
     <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
@@ -24,10 +31,13 @@ export function ElementSelector() {
             SUPERPOWER WORLD
           </h1>
           <p className="text-xl text-gray-300">Choose your element</p>
+          {currency > 0 && (
+            <p className="text-yellow-400 mt-1">● {currency} coins saved</p>
+          )}
         </div>
 
         <div className="grid grid-cols-3 gap-4 max-w-2xl">
-          {(Object.keys(ELEMENTS) as ElementType[]).map((key) => {
+          {availableElements.map((key) => {
             const element = ELEMENTS[key]
             return (
               <button
@@ -72,7 +82,7 @@ export function ElementSelector() {
         </div>
 
         <p className="text-gray-500 text-sm">
-          WASD to move · Mouse to look · Space to jump · 1/2/3 for abilities
+          WASD to move · Mouse to look · Space to jump · 1/2/3 for abilities · Tab for shop
         </p>
       </div>
     </div>
