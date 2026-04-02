@@ -10,6 +10,7 @@ import { CaptureZone } from './CaptureZone'
 import { AimIndicator } from './AimIndicator'
 import { AmusementPark } from './AmusementPark'
 import { NinjaFacility } from './NinjaFacility'
+import { FazbearPizzeria } from './FazbearPizzeria'
 
 export function Scene() {
   return (
@@ -69,6 +70,11 @@ export function Scene() {
       {/* Ninja Training Facility */}
       <group position={[-200, 0, -200]}>
         <NinjaFacility />
+      </group>
+
+      {/* Freddy Fazbear's Pizzeria */}
+      <group position={[200, 0, -200]}>
+        <FazbearPizzeria />
       </group>
     </>
   )

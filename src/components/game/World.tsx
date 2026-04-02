@@ -16,8 +16,14 @@ function inNinjaZone(x: number, z: number): boolean {
   return Math.sqrt(dx * dx + dz * dz) < 40
 }
 
+function inFazbearZone(x: number, z: number): boolean {
+  const dx = x - 200
+  const dz = z - (-200)
+  return Math.sqrt(dx * dx + dz * dz) < 40
+}
+
 function inAnySpecialZone(x: number, z: number): boolean {
-  return inParkZone(x, z) || inNinjaZone(x, z)
+  return inParkZone(x, z) || inNinjaZone(x, z) || inFazbearZone(x, z)
 }
 
 function Tree({ position }: { position: [number, number, number] }) {
@@ -175,6 +181,11 @@ export function World() {
       </mesh>
       {/* Path toward ninja facility (southwest) */}
       <mesh rotation={[-Math.PI / 2, Math.PI / 4, 0]} position={[-100, 0.01, -100]}>
+        <planeGeometry args={[4, 200]} />
+        <meshStandardMaterial color="#C4A76C" />
+      </mesh>
+      {/* Path toward Fazbear Pizzeria (southeast) */}
+      <mesh rotation={[-Math.PI / 2, -Math.PI / 4, 0]} position={[100, 0.01, -100]}>
         <planeGeometry args={[4, 200]} />
         <meshStandardMaterial color="#C4A76C" />
       </mesh>

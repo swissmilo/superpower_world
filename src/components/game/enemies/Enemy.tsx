@@ -108,6 +108,7 @@ export function Enemy({ def, spawnPosition, onDeath }: EnemyProps) {
     const safeZones = [
       { x: 200, z: 200, r: 40 },
       { x: -200, z: -200, r: 40 },
+      { x: 200, z: -200, r: 40 },
     ]
     for (const zone of safeZones) {
       const zdx = pos.x - zone.x
