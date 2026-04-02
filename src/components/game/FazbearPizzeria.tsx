@@ -20,23 +20,19 @@ const WALL_T = 0.3
 
 function Wall({ position, args }: { position: [number, number, number]; args: [number, number, number] }) {
   return (
-    <RigidBody type="fixed" position={position} colliders="cuboid">
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={args} />
-        <meshStandardMaterial color="#8B7D6B" />
-      </mesh>
-    </RigidBody>
+    <mesh position={position} castShadow receiveShadow>
+      <boxGeometry args={args} />
+      <meshStandardMaterial color="#8B7D6B" />
+    </mesh>
   )
 }
 
 function InteriorWall({ position, args, color = '#A0937D' }: { position: [number, number, number]; args: [number, number, number]; color?: string }) {
   return (
-    <RigidBody type="fixed" position={position} colliders="cuboid">
-      <mesh>
-        <boxGeometry args={args} />
-        <meshStandardMaterial color={color} />
-      </mesh>
-    </RigidBody>
+    <mesh position={position}>
+      <boxGeometry args={args} />
+      <meshStandardMaterial color={color} />
+    </mesh>
   )
 }
 
@@ -68,52 +64,32 @@ export function FazbearPizzeria() {
         <meshStandardMaterial color="#C49837" />
       </mesh>
 
-      {/* Ceiling */}
-      <mesh position={[0, WALL_H, 0]}>
-        <boxGeometry args={[BUILDING_W, 0.2, BUILDING_D]} />
-        <meshStandardMaterial color="#666655" />
-      </mesh>
+      {/* === WALLS — visual mesh + separate matching RigidBody for exact alignment === */}
+      {/* Back wall */}
+      <Wall position={[0, WALL_H / 2, -bz]} args={[BUILDING_W + WALL_T, WALL_H, WALL_T]} />
+      {/* Left wall */}
+      <Wall position={[-bx, WALL_H / 2, 0]} args={[WALL_T, WALL_H, BUILDING_D + WALL_T]} />
+      {/* Right wall */}
+      <Wall position={[bx, WALL_H / 2, 0]} args={[WALL_T, WALL_H, BUILDING_D + WALL_T]} />
+      {/* Front wall left (x: -15 to -2, entrance gap -2 to 5) */}
+      <Wall position={[-8.5, WALL_H / 2, bz]} args={[13, WALL_H, WALL_T]} />
+      {/* Front wall right (x: 5 to 15) */}
+      <Wall position={[10, WALL_H / 2, bz]} args={[10, WALL_H, WALL_T]} />
 
-      {/* Ceiling lights */}
-      {[-8, 0, 8].map((x, i) => (
-        <mesh key={`light-${i}`} position={[x, WALL_H - 0.3, 0]}>
-          <boxGeometry args={[1.5, 0.1, 0.3]} />
-          <meshStandardMaterial color="#FFFFEE" emissive="#FFFFCC" emissiveIntensity={0.5} />
-        </mesh>
-      ))}
+      {/* === INTERIOR WALLS (low height 2.5 so you can see over from above) === */}
+      {/* Stage/dining divider at x=-5, from z=-5 to z=4 (doorway z=4 to z=7) */}
+      <InteriorWall position={[-5, 1.25, -0.5]} args={[WALL_T, 2.5, 9]} />
 
-      {/* === EXTERIOR WALLS === */}
-      {/* Back wall (full) */}
-      <Wall position={[0, WALL_H / 2, -bz]} args={[BUILDING_W, WALL_H, WALL_T]} />
-      {/* Left wall (full) */}
-      <Wall position={[-bx, WALL_H / 2, 0]} args={[WALL_T, WALL_H, BUILDING_D]} />
-      {/* Right wall (full) */}
-      <Wall position={[bx, WALL_H / 2, 0]} args={[WALL_T, WALL_H, BUILDING_D]} />
-      {/* Front wall - left section */}
-      <Wall position={[-8, WALL_H / 2, bz]} args={[14, WALL_H, WALL_T]} />
-      {/* Front wall - right section (entrance gap ~6 units wide on the right) */}
-      <Wall position={[11, WALL_H / 2, bz]} args={[8, WALL_H, WALL_T]} />
-      {/* Front wall - above entrance */}
-      <Wall position={[4, WALL_H - 0.5, bz]} args={[6, 1, WALL_T]} />
+      {/* Back rooms wall at z=-5 with central doorway (x=-3 to x=0) */}
+      <InteriorWall position={[-9, 1.25, -5]} args={[12, 2.5, WALL_T]} />
+      <InteriorWall position={[8, 1.25, -5]} args={[14, 2.5, WALL_T]} />
 
-      {/* === INTERIOR WALLS === */}
-      {/* Wall between stage and eating area (runs front-to-back, with doorway gap at front) */}
-      <InteriorWall position={[-5, WALL_H / 2, 2]} args={[WALL_T, WALL_H, 10]} />
-      {/* Wall between stage and eating area (upper section) */}
-      <InteriorWall position={[-5, WALL_H / 2, -6]} args={[WALL_T, WALL_H, 6]} />
+      {/* Kitchen/storage divider at x=0, z=-5 to z=-12.5 */}
+      <InteriorWall position={[0, 1.25, -8.75]} args={[WALL_T, 2.5, 7.5]} />
 
-      {/* Wall between kitchen and storage (back rooms divider) */}
-      <InteriorWall position={[0, WALL_H / 2, -9]} args={[WALL_T, WALL_H, 8]} />
-
-      {/* Wall separating back rooms from front rooms */}
-      {/* Left section (behind stage, with doorway) */}
-      <InteriorWall position={[-10, WALL_H / 2, -5]} args={[10, WALL_H, WALL_T]} />
-      {/* Right section (behind eating area, with doorway) */}
-      <InteriorWall position={[8, WALL_H / 2, -5]} args={[14, WALL_H, WALL_T]} />
-
-      {/* Security room walls */}
-      <InteriorWall position={[-5, WALL_H / 2, 8]} args={[WALL_T, WALL_H, 5]} />
-      <InteriorWall position={[-9, WALL_H / 2, 5.5]} args={[8, WALL_H, WALL_T]} />
+      {/* Security room at front-left */}
+      <InteriorWall position={[-5, 1.25, 9.5]} args={[WALL_T, 2.5, 6]} />
+      <InteriorWall position={[-10, 1.25, 6.5]} args={[10, 2.5, WALL_T]} />
 
       {/* === SIGN === */}
       <group position={[4, WALL_H + 1, bz + 0.5]}>
