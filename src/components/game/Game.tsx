@@ -8,6 +8,7 @@ import { Suspense } from 'react'
 import { useKeyboardMap } from '@/hooks/useKeyboard'
 import { usePointerLock } from '@/hooks/usePointerLock'
 import { useGameStore } from '@/stores/gameStore'
+import { useWaterparkStore } from '@/stores/waterparkStore'
 import { Scene } from './Scene'
 import { MainMenu } from '@/components/ui/MainMenu'
 import { HUD } from '@/components/ui/HUD'
@@ -18,6 +19,7 @@ import { BossHealthBar } from '@/components/ui/BossHealthBar'
 import { CaptureZoneIndicator } from '@/components/ui/CaptureZoneIndicator'
 import { TouchControls } from '@/components/ui/TouchControls'
 import { RidePrompt } from '@/components/ui/RidePrompt'
+import { WaterparkUI } from '@/components/ui/WaterparkUI'
 
 function GameCanvas() {
   const { requestLock } = usePointerLock()
@@ -54,7 +56,12 @@ function GameCanvas() {
   return (
     <div
       style={{ width: '100vw', height: '100vh' }}
-      onClick={phase === 'playing' && !showShop ? requestLock : undefined}
+      onClick={() => {
+        // Don't grab the pointer while building — the cursor drives placement.
+        if (phase === 'playing' && !showShop && useWaterparkStore.getState().mode !== 'build') {
+          requestLock()
+        }
+      }}
     >
       <Canvas
         shadows
@@ -86,6 +93,7 @@ function GameCanvas() {
       <CurrencyPopup />
       <TouchControls />
       {phase === 'playing' && <RidePrompt />}
+      {phase === 'playing' && <WaterparkUI />}
     </div>
   )
 }
@@ -96,6 +104,7 @@ export default function Game() {
   // Load saved game on mount
   useEffect(() => {
     useGameStore.getState().loadGame()
+    useWaterparkStore.getState().load()
   }, [])
 
   return (
