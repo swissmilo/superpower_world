@@ -6,7 +6,6 @@ import { Billboard, Text } from '@react-three/drei'
 import * as THREE from 'three'
 import { playerRefs } from '@/stores/playerRefs'
 
-const RIDE_ID = 'water_slide'
 const TOWER_HEIGHT = 20
 const SLIDE_DURATION = 6 // seconds to slide from top to bottom
 const MOUNT_RANGE = 4
@@ -126,7 +125,13 @@ function TowerStructure() {
   )
 }
 
-export function WaterSlide({ worldOffset = [0, 0, 0] }: { worldOffset?: [number, number, number] }) {
+export function WaterSlide({
+  worldOffset = [0, 0, 0],
+  rideId = 'water_slide',
+}: {
+  worldOffset?: [number, number, number]
+  rideId?: string
+}) {
   const slideTRef = useRef(0)
   const isSliding = useRef(false)
   const curve = useMemo(() => createSlideCurve(), [])
@@ -144,10 +149,10 @@ export function WaterSlide({ worldOffset = [0, 0, 0] }: { worldOffset?: [number,
     const dist = playerRefs.position.distanceTo(mountPoint)
 
     if (dist < MOUNT_RANGE && !playerRefs.isOnRide) {
-      playerRefs.nearRide = RIDE_ID
+      playerRefs.nearRide = rideId
       playerRefs.mountRide = () => {
         playerRefs.isOnRide = true
-        playerRefs.currentRide = RIDE_ID
+        playerRefs.currentRide = rideId
         slideTRef.current = 0
         isSliding.current = true
       }
@@ -157,13 +162,13 @@ export function WaterSlide({ worldOffset = [0, 0, 0] }: { worldOffset?: [number,
         playerRefs.nearRide = null
         isSliding.current = false
       }
-    } else if (playerRefs.nearRide === RIDE_ID && !playerRefs.isOnRide) {
+    } else if (playerRefs.nearRide === rideId && !playerRefs.isOnRide) {
       playerRefs.nearRide = null
       playerRefs.mountRide = null
     }
 
     // Slide animation when riding
-    if (playerRefs.isOnRide && playerRefs.currentRide === RIDE_ID && isSliding.current) {
+    if (playerRefs.isOnRide && playerRefs.currentRide === rideId && isSliding.current) {
       slideTRef.current += (delta / SLIDE_DURATION)
 
       if (slideTRef.current >= 1) {
@@ -228,7 +233,7 @@ export function WaterSlide({ worldOffset = [0, 0, 0] }: { worldOffset?: [number,
       </mesh>
 
       {/* "Press Space" indicator */}
-      {playerRefs.nearRide === RIDE_ID && !playerRefs.isOnRide && (
+      {playerRefs.nearRide === rideId && !playerRefs.isOnRide && (
         <Billboard position={[0, 3, 0]}>
           <Text
             fontSize={0.5}

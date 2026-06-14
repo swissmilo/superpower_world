@@ -11,6 +11,7 @@ import { AimIndicator } from './AimIndicator'
 import { AmusementPark } from './AmusementPark'
 import { NinjaFacility } from './NinjaFacility'
 import { FazbearPizzeria } from './FazbearPizzeria'
+import { Waterpark } from './Waterpark'
 
 export function Scene() {
   return (
@@ -75,6 +76,11 @@ export function Scene() {
       {/* Freddy Fazbear's Pizzeria */}
       <group position={[200, 0, -200]}>
         <FazbearPizzeria />
+      </group>
+
+      {/* Waterpark Builder */}
+      <group position={[-200, 0, 200]}>
+        <Waterpark />
       </group>
     </>
   )

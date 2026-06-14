@@ -5,6 +5,7 @@ import { useFrame } from '@react-three/fiber'
 import { useKeyboardControls } from '@react-three/drei'
 import { Controls, ABILITY_CONTROLS } from '@/hooks/useKeyboard'
 import { useGameStore } from '@/stores/gameStore'
+import { useWaterparkStore } from '@/stores/waterparkStore'
 import { playerRefs } from '@/stores/playerRefs'
 import { ELEMENTS } from '@/lib/elements'
 import type { AbilityDef } from '@/types/game'
@@ -42,6 +43,8 @@ export function PowerManager() {
   useFrame((_, delta) => {
     const store = useGameStore.getState()
     if (store.phase !== 'playing' || store.isPaused()) return
+    // Don't fire abilities while placing pieces in the waterpark builder.
+    if (useWaterparkStore.getState().mode === 'build') return
 
     // Tick cooldowns
     store.tickCooldowns(delta)

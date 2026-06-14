@@ -12,10 +12,67 @@ interface AnimatronicProps {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Character sub-components                                          */
+/*  Character HEAD sub-components (attached to headRef for tracking)   */
 /* ------------------------------------------------------------------ */
 
-function FreddyModel({ eyeIntensity }: { eyeIntensity: number }) {
+function FreddyHead({ eyeIntensity }: { eyeIntensity: number }) {
+  return (
+    <group position={[0, 1.4, 0]}>
+      {/* Head */}
+      <mesh castShadow>
+        <sphereGeometry args={[0.4, 12, 12]} />
+        <meshStandardMaterial color="#A0522D" />
+      </mesh>
+      {/* Left ear */}
+      <mesh position={[-0.3, 0.45, 0]} castShadow>
+        <sphereGeometry args={[0.12, 8, 8]} />
+        <meshStandardMaterial color="#6B3410" />
+      </mesh>
+      {/* Right ear */}
+      <mesh position={[0.3, 0.45, 0]} castShadow>
+        <sphereGeometry args={[0.12, 8, 8]} />
+        <meshStandardMaterial color="#6B3410" />
+      </mesh>
+      {/* Top hat */}
+      <mesh position={[0, 0.55, 0]} castShadow>
+        <cylinderGeometry args={[0.2, 0.2, 0.3, 12]} />
+        <meshStandardMaterial color="#111111" />
+      </mesh>
+      {/* Hat brim */}
+      <mesh position={[0, 0.38, 0]}>
+        <cylinderGeometry args={[0.28, 0.28, 0.04, 12]} />
+        <meshStandardMaterial color="#111111" />
+      </mesh>
+      {/* Left eye */}
+      <mesh position={[-0.14, 0.05, 0.35]}>
+        <sphereGeometry args={[0.06, 8, 8]} />
+        <meshStandardMaterial color="#FFFFFF" emissive="#FFFFFF" emissiveIntensity={eyeIntensity} />
+      </mesh>
+      {/* Left pupil */}
+      <mesh position={[-0.14, 0.05, 0.41]}>
+        <sphereGeometry args={[0.03, 6, 6]} />
+        <meshStandardMaterial color="#111111" />
+      </mesh>
+      {/* Right eye */}
+      <mesh position={[0.14, 0.05, 0.35]}>
+        <sphereGeometry args={[0.06, 8, 8]} />
+        <meshStandardMaterial color="#FFFFFF" emissive="#FFFFFF" emissiveIntensity={eyeIntensity} />
+      </mesh>
+      {/* Right pupil */}
+      <mesh position={[0.14, 0.05, 0.41]}>
+        <sphereGeometry args={[0.03, 6, 6]} />
+        <meshStandardMaterial color="#111111" />
+      </mesh>
+      {/* Mouth */}
+      <mesh position={[0, -0.15, 0.38]}>
+        <boxGeometry args={[0.18, 0.06, 0.04]} />
+        <meshStandardMaterial color="#3A1A0A" />
+      </mesh>
+    </group>
+  )
+}
+
+function FreddyBody() {
   return (
     <group>
       {/* Body */}
@@ -23,60 +80,10 @@ function FreddyModel({ eyeIntensity }: { eyeIntensity: number }) {
         <boxGeometry args={[0.8, 1, 0.5]} />
         <meshStandardMaterial color="#8B4513" />
       </mesh>
-      {/* Head */}
-      <mesh position={[0, 1.4, 0]} castShadow>
-        <sphereGeometry args={[0.4, 12, 12]} />
-        <meshStandardMaterial color="#A0522D" />
-      </mesh>
-      {/* Left ear */}
-      <mesh position={[-0.3, 1.85, 0]} castShadow>
-        <sphereGeometry args={[0.12, 8, 8]} />
-        <meshStandardMaterial color="#6B3410" />
-      </mesh>
-      {/* Right ear */}
-      <mesh position={[0.3, 1.85, 0]} castShadow>
-        <sphereGeometry args={[0.12, 8, 8]} />
-        <meshStandardMaterial color="#6B3410" />
-      </mesh>
-      {/* Top hat */}
-      <mesh position={[0, 1.95, 0]} castShadow>
-        <cylinderGeometry args={[0.2, 0.2, 0.3, 12]} />
-        <meshStandardMaterial color="#111111" />
-      </mesh>
-      {/* Hat brim */}
-      <mesh position={[0, 1.78, 0]}>
-        <cylinderGeometry args={[0.28, 0.28, 0.04, 12]} />
-        <meshStandardMaterial color="#111111" />
-      </mesh>
       {/* Bow tie */}
       <mesh position={[0, 0.95, 0.26]} castShadow>
         <boxGeometry args={[0.2, 0.1, 0.05]} />
         <meshStandardMaterial color="#111111" />
-      </mesh>
-      {/* Left eye */}
-      <mesh position={[-0.14, 1.45, 0.35]}>
-        <sphereGeometry args={[0.06, 8, 8]} />
-        <meshStandardMaterial color="#FFFFFF" emissive="#FFFFFF" emissiveIntensity={eyeIntensity} />
-      </mesh>
-      {/* Left pupil */}
-      <mesh position={[-0.14, 1.45, 0.41]}>
-        <sphereGeometry args={[0.03, 6, 6]} />
-        <meshStandardMaterial color="#111111" />
-      </mesh>
-      {/* Right eye */}
-      <mesh position={[0.14, 1.45, 0.35]}>
-        <sphereGeometry args={[0.06, 8, 8]} />
-        <meshStandardMaterial color="#FFFFFF" emissive="#FFFFFF" emissiveIntensity={eyeIntensity} />
-      </mesh>
-      {/* Right pupil */}
-      <mesh position={[0.14, 1.45, 0.41]}>
-        <sphereGeometry args={[0.03, 6, 6]} />
-        <meshStandardMaterial color="#111111" />
-      </mesh>
-      {/* Mouth */}
-      <mesh position={[0, 1.25, 0.38]}>
-        <boxGeometry args={[0.18, 0.06, 0.04]} />
-        <meshStandardMaterial color="#3A1A0A" />
       </mesh>
       {/* Left leg */}
       <mesh position={[-0.2, -0.3, 0]} castShadow>
@@ -102,43 +109,52 @@ function FreddyModel({ eyeIntensity }: { eyeIntensity: number }) {
   )
 }
 
-function ChicaModel({ eyeIntensity }: { eyeIntensity: number }) {
+/* ------------------------------------------------------------------ */
+
+function ChicaHead({ eyeIntensity }: { eyeIntensity: number }) {
+  return (
+    <group position={[0, 1.4, 0]}>
+      {/* Head - slightly wider */}
+      <mesh castShadow>
+        <sphereGeometry args={[0.45, 12, 12]} />
+        <meshStandardMaterial color="#FFEC8B" />
+      </mesh>
+      {/* Beak */}
+      <mesh position={[0, -0.1, 0.45]} rotation={[-Math.PI / 2, 0, 0]} castShadow>
+        <coneGeometry args={[0.1, 0.2, 8]} />
+        <meshStandardMaterial color="#FF8C00" />
+      </mesh>
+      {/* Left eye */}
+      <mesh position={[-0.16, 0.08, 0.38]}>
+        <sphereGeometry args={[0.07, 8, 8]} />
+        <meshStandardMaterial color="#FFFFFF" emissive="#FFFFFF" emissiveIntensity={eyeIntensity} />
+      </mesh>
+      {/* Left pupil - purple */}
+      <mesh position={[-0.16, 0.08, 0.45]}>
+        <sphereGeometry args={[0.035, 6, 6]} />
+        <meshStandardMaterial color="#8B00FF" />
+      </mesh>
+      {/* Right eye */}
+      <mesh position={[0.16, 0.08, 0.38]}>
+        <sphereGeometry args={[0.07, 8, 8]} />
+        <meshStandardMaterial color="#FFFFFF" emissive="#FFFFFF" emissiveIntensity={eyeIntensity} />
+      </mesh>
+      {/* Right pupil - purple */}
+      <mesh position={[0.16, 0.08, 0.45]}>
+        <sphereGeometry args={[0.035, 6, 6]} />
+        <meshStandardMaterial color="#8B00FF" />
+      </mesh>
+    </group>
+  )
+}
+
+function ChicaBody() {
   return (
     <group>
       {/* Body */}
       <mesh position={[0, 0.5, 0]} castShadow>
         <boxGeometry args={[0.8, 1, 0.5]} />
         <meshStandardMaterial color="#FFD700" />
-      </mesh>
-      {/* Head - slightly wider */}
-      <mesh position={[0, 1.4, 0]} castShadow>
-        <sphereGeometry args={[0.45, 12, 12]} />
-        <meshStandardMaterial color="#FFEC8B" />
-      </mesh>
-      {/* Beak */}
-      <mesh position={[0, 1.3, 0.45]} rotation={[-Math.PI / 2, 0, 0]} castShadow>
-        <coneGeometry args={[0.1, 0.2, 8]} />
-        <meshStandardMaterial color="#FF8C00" />
-      </mesh>
-      {/* Left eye */}
-      <mesh position={[-0.16, 1.48, 0.38]}>
-        <sphereGeometry args={[0.07, 8, 8]} />
-        <meshStandardMaterial color="#FFFFFF" emissive="#FFFFFF" emissiveIntensity={eyeIntensity} />
-      </mesh>
-      {/* Left pupil - purple */}
-      <mesh position={[-0.16, 1.48, 0.45]}>
-        <sphereGeometry args={[0.035, 6, 6]} />
-        <meshStandardMaterial color="#8B00FF" />
-      </mesh>
-      {/* Right eye */}
-      <mesh position={[0.16, 1.48, 0.38]}>
-        <sphereGeometry args={[0.07, 8, 8]} />
-        <meshStandardMaterial color="#FFFFFF" emissive="#FFFFFF" emissiveIntensity={eyeIntensity} />
-      </mesh>
-      {/* Right pupil - purple */}
-      <mesh position={[0.16, 1.48, 0.45]}>
-        <sphereGeometry args={[0.035, 6, 6]} />
-        <meshStandardMaterial color="#8B00FF" />
       </mesh>
       {/* Bib on chest */}
       <mesh position={[0, 0.6, 0.26]} castShadow>
@@ -189,53 +205,62 @@ function ChicaModel({ eyeIntensity }: { eyeIntensity: number }) {
   )
 }
 
-function FoxyModel({ eyeIntensity }: { eyeIntensity: number }) {
+/* ------------------------------------------------------------------ */
+
+function FoxyHead({ eyeIntensity }: { eyeIntensity: number }) {
+  return (
+    <group position={[0, 1.3, 0]}>
+      {/* Head - angular (box) */}
+      <mesh castShadow>
+        <boxGeometry args={[0.5, 0.4, 0.5]} />
+        <meshStandardMaterial color="#B22222" />
+      </mesh>
+      {/* Snout */}
+      <mesh position={[0, -0.1, 0.35]} castShadow>
+        <boxGeometry args={[0.25, 0.15, 0.2]} />
+        <meshStandardMaterial color="#CD5555" />
+      </mesh>
+      {/* Jaw - slightly open */}
+      <mesh position={[0, -0.22, 0.35]}>
+        <boxGeometry args={[0.22, 0.06, 0.18]} />
+        <meshStandardMaterial color="#8B1A1A" />
+      </mesh>
+      {/* Left ear (cone rotated) */}
+      <mesh position={[-0.22, 0.35, 0]} rotation={[0, 0, -0.2]} castShadow>
+        <coneGeometry args={[0.08, 0.25, 6]} />
+        <meshStandardMaterial color="#8B1A1A" />
+      </mesh>
+      {/* Right ear */}
+      <mesh position={[0.22, 0.35, 0]} rotation={[0, 0, 0.2]} castShadow>
+        <coneGeometry args={[0.08, 0.25, 6]} />
+        <meshStandardMaterial color="#8B1A1A" />
+      </mesh>
+      {/* Eye patch over left eye */}
+      <mesh position={[-0.12, 0.05, 0.26]}>
+        <boxGeometry args={[0.1, 0.1, 0.02]} />
+        <meshStandardMaterial color="#111111" />
+      </mesh>
+      {/* Right eye */}
+      <mesh position={[0.12, 0.05, 0.26]}>
+        <sphereGeometry args={[0.05, 8, 8]} />
+        <meshStandardMaterial color="#FFFFFF" emissive="#FFFFFF" emissiveIntensity={eyeIntensity} />
+      </mesh>
+      {/* Right eye pupil - golden */}
+      <mesh position={[0.12, 0.05, 0.31]}>
+        <sphereGeometry args={[0.025, 6, 6]} />
+        <meshStandardMaterial color="#DAA520" />
+      </mesh>
+    </group>
+  )
+}
+
+function FoxyBody() {
   return (
     <group>
       {/* Body */}
       <mesh position={[0, 0.5, 0]} castShadow>
         <boxGeometry args={[0.7, 1, 0.45]} />
         <meshStandardMaterial color="#CD3333" />
-      </mesh>
-      {/* Head - angular (box) */}
-      <mesh position={[0, 1.3, 0]} castShadow>
-        <boxGeometry args={[0.5, 0.4, 0.5]} />
-        <meshStandardMaterial color="#B22222" />
-      </mesh>
-      {/* Snout */}
-      <mesh position={[0, 1.2, 0.35]} castShadow>
-        <boxGeometry args={[0.25, 0.15, 0.2]} />
-        <meshStandardMaterial color="#CD5555" />
-      </mesh>
-      {/* Jaw - slightly open */}
-      <mesh position={[0, 1.08, 0.35]}>
-        <boxGeometry args={[0.22, 0.06, 0.18]} />
-        <meshStandardMaterial color="#8B1A1A" />
-      </mesh>
-      {/* Left ear (cone rotated) */}
-      <mesh position={[-0.22, 1.65, 0]} rotation={[0, 0, -0.2]} castShadow>
-        <coneGeometry args={[0.08, 0.25, 6]} />
-        <meshStandardMaterial color="#8B1A1A" />
-      </mesh>
-      {/* Right ear */}
-      <mesh position={[0.22, 1.65, 0]} rotation={[0, 0, 0.2]} castShadow>
-        <coneGeometry args={[0.08, 0.25, 6]} />
-        <meshStandardMaterial color="#8B1A1A" />
-      </mesh>
-      {/* Eye patch over left eye */}
-      <mesh position={[-0.12, 1.35, 0.26]}>
-        <boxGeometry args={[0.1, 0.1, 0.02]} />
-        <meshStandardMaterial color="#111111" />
-      </mesh>
-      {/* Right eye */}
-      <mesh position={[0.12, 1.35, 0.26]}>
-        <sphereGeometry args={[0.05, 8, 8]} />
-        <meshStandardMaterial color="#FFFFFF" emissive="#FFFFFF" emissiveIntensity={eyeIntensity} />
-      </mesh>
-      {/* Right eye pupil - golden */}
-      <mesh position={[0.12, 1.35, 0.31]}>
-        <sphereGeometry args={[0.025, 6, 6]} />
-        <meshStandardMaterial color="#DAA520" />
       </mesh>
       {/* Left arm - hook hand */}
       <group position={[-0.5, 0.5, 0]}>
@@ -244,12 +269,12 @@ function FoxyModel({ eyeIntensity }: { eyeIntensity: number }) {
           <meshStandardMaterial color="#CD3333" />
         </mesh>
         {/* Hook */}
-        <mesh position={[0, -0.45, 0]} rotation={[0, 0, 0]}>
+        <mesh position={[0, -0.45, 0]}>
           <coneGeometry args={[0.04, 0.15, 6]} />
           <meshStandardMaterial color="#AAAAAA" metalness={0.8} roughness={0.2} />
         </mesh>
       </group>
-      {/* Right arm - normal hand */}
+      {/* Right arm - normal */}
       <mesh position={[0.5, 0.5, 0]} castShadow>
         <boxGeometry args={[0.2, 0.7, 0.2]} />
         <meshStandardMaterial color="#CD3333" />
@@ -276,58 +301,67 @@ function FoxyModel({ eyeIntensity }: { eyeIntensity: number }) {
   )
 }
 
-function BonnieModel({ eyeIntensity }: { eyeIntensity: number }) {
+/* ------------------------------------------------------------------ */
+
+function BonnieHead({ eyeIntensity }: { eyeIntensity: number }) {
+  return (
+    <group position={[0, 1.4, 0]}>
+      {/* Head */}
+      <mesh castShadow>
+        <sphereGeometry args={[0.4, 12, 12]} />
+        <meshStandardMaterial color="#7B68EE" />
+      </mesh>
+      {/* Left ear - long */}
+      <mesh position={[-0.15, 0.6, 0]} castShadow>
+        <boxGeometry args={[0.12, 0.6, 0.08]} />
+        <meshStandardMaterial color="#7B68EE" />
+      </mesh>
+      {/* Left ear inner */}
+      <mesh position={[-0.15, 0.6, 0.03]}>
+        <boxGeometry args={[0.08, 0.5, 0.04]} />
+        <meshStandardMaterial color="#9B88FF" />
+      </mesh>
+      {/* Right ear - long */}
+      <mesh position={[0.15, 0.6, 0]} castShadow>
+        <boxGeometry args={[0.12, 0.6, 0.08]} />
+        <meshStandardMaterial color="#7B68EE" />
+      </mesh>
+      {/* Right ear inner */}
+      <mesh position={[0.15, 0.6, 0.03]}>
+        <boxGeometry args={[0.08, 0.5, 0.04]} />
+        <meshStandardMaterial color="#9B88FF" />
+      </mesh>
+      {/* Left eye */}
+      <mesh position={[-0.14, 0.05, 0.35]}>
+        <sphereGeometry args={[0.06, 8, 8]} />
+        <meshStandardMaterial color="#FFFFFF" emissive="#FFFFFF" emissiveIntensity={eyeIntensity} />
+      </mesh>
+      {/* Left pupil - red */}
+      <mesh position={[-0.14, 0.05, 0.41]}>
+        <sphereGeometry args={[0.03, 6, 6]} />
+        <meshStandardMaterial color="#CC0000" />
+      </mesh>
+      {/* Right eye */}
+      <mesh position={[0.14, 0.05, 0.35]}>
+        <sphereGeometry args={[0.06, 8, 8]} />
+        <meshStandardMaterial color="#FFFFFF" emissive="#FFFFFF" emissiveIntensity={eyeIntensity} />
+      </mesh>
+      {/* Right pupil - red */}
+      <mesh position={[0.14, 0.05, 0.41]}>
+        <sphereGeometry args={[0.03, 6, 6]} />
+        <meshStandardMaterial color="#CC0000" />
+      </mesh>
+    </group>
+  )
+}
+
+function BonnieBody() {
   return (
     <group>
       {/* Body */}
       <mesh position={[0, 0.5, 0]} castShadow>
         <boxGeometry args={[0.8, 1, 0.5]} />
         <meshStandardMaterial color="#6A5ACD" />
-      </mesh>
-      {/* Head */}
-      <mesh position={[0, 1.4, 0]} castShadow>
-        <sphereGeometry args={[0.4, 12, 12]} />
-        <meshStandardMaterial color="#7B68EE" />
-      </mesh>
-      {/* Left ear - long */}
-      <mesh position={[-0.15, 2.0, 0]} castShadow>
-        <boxGeometry args={[0.12, 0.6, 0.08]} />
-        <meshStandardMaterial color="#7B68EE" />
-      </mesh>
-      {/* Left ear inner */}
-      <mesh position={[-0.15, 2.0, 0.03]}>
-        <boxGeometry args={[0.08, 0.5, 0.04]} />
-        <meshStandardMaterial color="#9B88FF" />
-      </mesh>
-      {/* Right ear - long */}
-      <mesh position={[0.15, 2.0, 0]} castShadow>
-        <boxGeometry args={[0.12, 0.6, 0.08]} />
-        <meshStandardMaterial color="#7B68EE" />
-      </mesh>
-      {/* Right ear inner */}
-      <mesh position={[0.15, 2.0, 0.03]}>
-        <boxGeometry args={[0.08, 0.5, 0.04]} />
-        <meshStandardMaterial color="#9B88FF" />
-      </mesh>
-      {/* Left eye */}
-      <mesh position={[-0.14, 1.45, 0.35]}>
-        <sphereGeometry args={[0.06, 8, 8]} />
-        <meshStandardMaterial color="#FFFFFF" emissive="#FFFFFF" emissiveIntensity={eyeIntensity} />
-      </mesh>
-      {/* Left pupil - red */}
-      <mesh position={[-0.14, 1.45, 0.41]}>
-        <sphereGeometry args={[0.03, 6, 6]} />
-        <meshStandardMaterial color="#CC0000" />
-      </mesh>
-      {/* Right eye */}
-      <mesh position={[0.14, 1.45, 0.35]}>
-        <sphereGeometry args={[0.06, 8, 8]} />
-        <meshStandardMaterial color="#FFFFFF" emissive="#FFFFFF" emissiveIntensity={eyeIntensity} />
-      </mesh>
-      {/* Right pupil - red */}
-      <mesh position={[0.14, 1.45, 0.41]}>
-        <sphereGeometry args={[0.03, 6, 6]} />
-        <meshStandardMaterial color="#CC0000" />
       </mesh>
       {/* Left leg */}
       <mesh position={[-0.2, -0.3, 0]} castShadow>
@@ -379,7 +413,7 @@ export function Animatronic({ character, worldOffset = [0, 0, 0], patrolPoints }
     isMoving: false,
   })
 
-  // Eye glow intensity ref
+  // Eye glow intensity -- updated per frame via material
   const eyeIntensityRef = useRef(0.3)
 
   // Memoize initial position
@@ -391,7 +425,7 @@ export function Animatronic({ character, worldOffset = [0, 0, 0], patrolPoints }
   // Temp vectors to avoid allocation in frame loop
   const _targetPos = useMemo(() => new THREE.Vector3(), [])
   const _currentPos = useMemo(() => new THREE.Vector3(), [])
-  const _toPlayer = useMemo(() => new THREE.Vector3(), [])
+  const _direction = useMemo(() => new THREE.Vector3(), [])
 
   useFrame((_, delta) => {
     if (!groupRef.current || patrolPoints.length === 0) return
@@ -411,6 +445,17 @@ export function Animatronic({ character, worldOffset = [0, 0, 0], patrolPoints }
     // --- Eye intensity ---
     const targetIntensity = distToPlayer < 5 ? 0.8 : 0.3
     eyeIntensityRef.current += (targetIntensity - eyeIntensityRef.current) * delta * 3
+
+    // Update eye emissive intensities by traversing the head group
+    if (headRef.current) {
+      headRef.current.traverse((child) => {
+        if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshStandardMaterial) {
+          if (child.material.emissive && child.material.emissiveIntensity > 0) {
+            child.material.emissiveIntensity = eyeIntensityRef.current
+          }
+        }
+      })
+    }
 
     // --- Patrol AI ---
     if (!p.isMoving) {
@@ -437,16 +482,16 @@ export function Animatronic({ character, worldOffset = [0, 0, 0], patrolPoints }
         p.elapsedAtPoint = 0
         p.pauseDuration = 3 + Math.random() * 2
       } else {
-        // Lerp toward target
+        // Move toward target
         const speed = 1.0
         const step = Math.min(speed * delta, dist)
-        const direction = _targetPos.clone().sub(_currentPos).normalize()
-        pos.x += direction.x * step
-        pos.y += direction.y * step
-        pos.z += direction.z * step
+        _direction.copy(_targetPos).sub(_currentPos).normalize()
+        pos.x += _direction.x * step
+        pos.y += _direction.y * step
+        pos.z += _direction.z * step
 
         // Face movement direction
-        const moveAngle = Math.atan2(direction.x, direction.z)
+        const moveAngle = Math.atan2(_direction.x, _direction.z)
         groupRef.current.rotation.y = moveAngle
       }
     }
@@ -475,23 +520,22 @@ export function Animatronic({ character, worldOffset = [0, 0, 0], patrolPoints }
     }
   })
 
-  // Select the character model
-  const CharacterBody = useMemo(() => {
-    switch (character) {
-      case 'freddy': return FreddyModel
-      case 'chica': return ChicaModel
-      case 'foxy': return FoxyModel
-      case 'bonnie': return BonnieModel
-    }
-  }, [character])
-
   return (
     <group ref={groupRef} position={startPos}>
-      {/* Head group wraps the character for head tracking rotation */}
-      <group ref={headRef}>
-        {/* Offset so the character's feet are at y=0 and total height is ~2.5 */}
-        <group position={[0, 0.6, 0]}>
-          <CharacterBody eyeIntensity={eyeIntensityRef.current} />
+      {/* Offset so the character's feet are at y=0, total height ~2.5 */}
+      <group position={[0, 0.6, 0]}>
+        {/* Body (does not rotate with head tracking) */}
+        {character === 'freddy' && <FreddyBody />}
+        {character === 'chica' && <ChicaBody />}
+        {character === 'foxy' && <FoxyBody />}
+        {character === 'bonnie' && <BonnieBody />}
+
+        {/* Head group (rotates to track player) */}
+        <group ref={headRef}>
+          {character === 'freddy' && <FreddyHead eyeIntensity={0.3} />}
+          {character === 'chica' && <ChicaHead eyeIntensity={0.3} />}
+          {character === 'foxy' && <FoxyHead eyeIntensity={0.3} />}
+          {character === 'bonnie' && <BonnieHead eyeIntensity={0.3} />}
         </group>
       </group>
     </group>
