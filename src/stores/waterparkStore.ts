@@ -20,7 +20,6 @@ interface WaterparkState {
   stars: number
   cards: Record<PieceType, number>
   placed: PlacedPiece[]
-  pendingMoney: number
   selectedPiece: PieceType | null
   showInventory: boolean
 
@@ -35,8 +34,7 @@ interface WaterparkState {
   placePiece: (type: PieceType, gx: number, gz: number, rot: number) => boolean
   removePiece: (id: string) => void
 
-  // Economy (money lives in the shared gameStore currency)
-  collectMoney: () => void
+  // Economy (income auto-credits the shared gameStore currency)
   getTotalCards: () => number
   tick: (delta: number) => void
 
@@ -83,13 +81,13 @@ interface SaveData {
 // Non-persisted accumulators for the income/card/star simulation.
 let cardTimer = 0
 let starProgress = 0
+let moneyProgress = 0 // fractional income carried between frames
 
 export const useWaterparkStore = create<WaterparkState>()((set, get) => ({
   mode: 'explore',
   stars: 0,
   cards: starterCards(),
   placed: [],
-  pendingMoney: 0,
   selectedPiece: null,
   showInventory: false,
 
@@ -151,12 +149,6 @@ export const useWaterparkStore = create<WaterparkState>()((set, get) => ({
     get().save()
   },
 
-  collectMoney: () => {
-    bankAdd(Math.floor(get().pendingMoney))
-    set({ pendingMoney: 0 })
-    useGameStore.getState().saveGame()
-  },
-
   getTotalCards: () => {
     const { cards } = get()
     return PIECE_TYPES.reduce((sum, t) => sum + (cards[t] ?? 0), 0)
@@ -166,11 +158,17 @@ export const useWaterparkStore = create<WaterparkState>()((set, get) => ({
     const { placed } = get()
     if (placed.length === 0) return
 
-    // Income accrues over the money sign while the park has attractions.
+    // Income auto-credits the shared balance while the park has attractions.
     const incomeRate = placed.reduce(
       (sum, p) => sum + PIECES[p.type].incomePerTick,
       0
     )
+    moneyProgress += incomeRate * delta
+    const whole = Math.floor(moneyProgress)
+    if (whole > 0) {
+      moneyProgress -= whole
+      bankAdd(whole)
+    }
 
     // Cards drip in over time — faster as the park grows (more customers).
     cardTimer += delta
@@ -187,7 +185,6 @@ export const useWaterparkStore = create<WaterparkState>()((set, get) => ({
     starProgress += (delta * starRate) / STAR_FACTOR
 
     set((s) => ({
-      pendingMoney: s.pendingMoney + incomeRate * delta,
       stars: Math.floor(starProgress),
       ...(cardUpdate ? { cards: { ...s.cards, ...cardUpdate } } : {}),
     }))

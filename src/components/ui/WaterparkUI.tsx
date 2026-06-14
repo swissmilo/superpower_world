@@ -26,9 +26,39 @@ function unlockPointer() {
   }
 }
 
+// Park actions — shared by the on-screen buttons and the keyboard shortcuts so
+// they work even while the pointer is locked for camera look.
+function doToggleBuild() {
+  const s = useWaterparkStore.getState()
+  if (s.mode === 'build') {
+    s.setMode('explore')
+    lockPointer()
+  } else {
+    s.setMode('build')
+    unlockPointer()
+  }
+}
+function doToggleBag() {
+  const s = useWaterparkStore.getState()
+  const willOpen = !s.showInventory
+  s.toggleInventory()
+  if (willOpen) unlockPointer()
+  else if (s.mode === 'explore') lockPointer()
+}
+function doCloseBag() {
+  const s = useWaterparkStore.getState()
+  if (s.showInventory) s.toggleInventory()
+  if (s.mode === 'explore') lockPointer()
+}
+
+function inParkNow() {
+  const dx = playerRefs.position.x - PARK_WORLD_OFFSET[0]
+  const dz = playerRefs.position.z - PARK_WORLD_OFFSET[2]
+  return Math.abs(dx) < PARK_RANGE && Math.abs(dz) < PARK_RANGE
+}
+
 export function WaterparkUI() {
   const [inPark, setInPark] = useState(false)
-  const [pending, setPending] = useState(0)
 
   const mode = useWaterparkStore((s) => s.mode)
   const money = useGameStore((s) => s.currency)
@@ -46,42 +76,40 @@ export function WaterparkUI() {
       const dz = playerRefs.position.z - PARK_WORLD_OFFSET[2]
       const within = Math.abs(dx) < PARK_RANGE && Math.abs(dz) < PARK_RANGE
       setInPark(within)
-      setPending(Math.floor(useWaterparkStore.getState().pendingMoney))
     }, 150)
     return () => clearInterval(id)
+  }, [])
+
+  // Keyboard shortcuts work even while the pointer is locked for camera look,
+  // so you can collect/build/open inventory without first pressing Esc.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+      if (!inParkNow()) return
+      const k = e.key.toLowerCase()
+      if (k === 'b') doToggleBuild()
+      else if (k === 'i') doToggleBag()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
   }, [])
 
   if (!inPark) return null
 
   const toggleMode = (e: React.MouseEvent) => {
     e.stopPropagation()
-    const store = useWaterparkStore.getState()
-    if (store.mode === 'build') {
-      store.setMode('explore')
-      lockPointer() // back to looking around / riding
-    } else {
-      store.setMode('build')
-      unlockPointer() // free the cursor for placement
-    }
+    doToggleBuild()
   }
 
   const onBag = (e: React.MouseEvent) => {
     e.stopPropagation()
-    const store = useWaterparkStore.getState()
-    const willOpen = !store.showInventory
-    store.toggleInventory()
-    if (willOpen) {
-      unlockPointer()
-    } else if (store.mode === 'explore') {
-      lockPointer()
-    }
+    doToggleBag()
   }
 
   const closeInventory = (e: React.MouseEvent) => {
     e.stopPropagation()
-    const store = useWaterparkStore.getState()
-    if (store.showInventory) store.toggleInventory()
-    if (store.mode === 'explore') lockPointer()
+    doCloseBag()
   }
 
   return (
@@ -122,19 +150,6 @@ export function WaterparkUI() {
       >
         🎒
       </button>
-
-      {/* Collect money button */}
-      {pending >= 1 && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            useWaterparkStore.getState().collectMoney()
-          }}
-          className="absolute bottom-6 right-6 px-5 py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold text-lg shadow-xl pointer-events-auto animate-pulse"
-        >
-          💰 Collect ${pending.toLocaleString()}
-        </button>
-      )}
 
       {/* Bottom build menu */}
       {mode === 'build' && (
