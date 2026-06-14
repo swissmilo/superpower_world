@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { useFrame, type ThreeEvent } from '@react-three/fiber'
 import { Billboard, Text } from '@react-three/drei'
 import { useWaterparkStore } from '@/stores/waterparkStore'
+import { useGameStore } from '@/stores/gameStore'
 import {
   PIECES,
   GRID,
@@ -134,7 +135,7 @@ export function Waterpark() {
     const def = PIECES[selected]
     buildRefs.valid =
       store.canPlace(selected, gx, gz, buildRefs.rot) &&
-      store.money >= def.cost &&
+      useGameStore.getState().currency >= def.cost &&
       (store.cards[selected] ?? 0) >= def.cardCost
   }
 

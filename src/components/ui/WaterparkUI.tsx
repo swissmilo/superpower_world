@@ -2,17 +2,36 @@
 
 import { useEffect, useState } from 'react'
 import { playerRefs } from '@/stores/playerRefs'
+import { useGameStore } from '@/stores/gameStore'
 import { useWaterparkStore } from '@/stores/waterparkStore'
 import { PIECES, PIECE_TYPES, PARK_WORLD_OFFSET, HALF_EXTENT } from '@/lib/waterparkPieces'
 
 const PARK_RANGE = HALF_EXTENT + 8 // consider "in park" a bit outside the walls
+
+function lockPointer() {
+  try {
+    const p = document.body.requestPointerLock()
+    // Newer browsers return a promise that can reject during the exit cooldown.
+    if (p && typeof (p as Promise<void>).catch === 'function') (p as Promise<void>).catch(() => {})
+  } catch {
+    /* ignore */
+  }
+}
+
+function unlockPointer() {
+  try {
+    document.exitPointerLock()
+  } catch {
+    /* ignore */
+  }
+}
 
 export function WaterparkUI() {
   const [inPark, setInPark] = useState(false)
   const [pending, setPending] = useState(0)
 
   const mode = useWaterparkStore((s) => s.mode)
-  const money = useWaterparkStore((s) => s.money)
+  const money = useGameStore((s) => s.currency)
   const stars = useWaterparkStore((s) => s.stars)
   const cards = useWaterparkStore((s) => s.cards)
   const selectedPiece = useWaterparkStore((s) => s.selectedPiece)
@@ -34,17 +53,35 @@ export function WaterparkUI() {
 
   if (!inPark) return null
 
-  const toggleMode = () => {
+  const toggleMode = (e: React.MouseEvent) => {
+    e.stopPropagation()
     const store = useWaterparkStore.getState()
     if (store.mode === 'build') {
       store.setMode('explore')
+      lockPointer() // back to looking around / riding
     } else {
       store.setMode('build')
-      // Free the cursor so it can drive placement.
-      if (typeof document !== 'undefined' && document.exitPointerLock) {
-        document.exitPointerLock()
-      }
+      unlockPointer() // free the cursor for placement
     }
+  }
+
+  const onBag = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const store = useWaterparkStore.getState()
+    const willOpen = !store.showInventory
+    store.toggleInventory()
+    if (willOpen) {
+      unlockPointer()
+    } else if (store.mode === 'explore') {
+      lockPointer()
+    }
+  }
+
+  const closeInventory = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const store = useWaterparkStore.getState()
+    if (store.showInventory) store.toggleInventory()
+    if (store.mode === 'explore') lockPointer()
   }
 
   return (
@@ -77,10 +114,10 @@ export function WaterparkUI() {
         </div>
       )}
 
-      {/* Red inventory button */}
+      {/* Red inventory button (above the modal so it can toggle it closed) */}
       <button
-        onClick={() => useWaterparkStore.getState().toggleInventory()}
-        className="absolute bottom-6 left-6 w-16 h-16 rounded-full bg-red-600 hover:bg-red-500 border-4 border-red-800 shadow-xl text-white text-2xl font-bold pointer-events-auto flex items-center justify-center"
+        onClick={onBag}
+        className="absolute bottom-6 left-6 z-50 w-16 h-16 rounded-full bg-red-600 hover:bg-red-500 border-4 border-red-800 shadow-xl text-white text-2xl font-bold pointer-events-auto flex items-center justify-center"
         title="Inventory"
       >
         🎒
@@ -89,7 +126,10 @@ export function WaterparkUI() {
       {/* Collect money button */}
       {pending >= 1 && (
         <button
-          onClick={() => useWaterparkStore.getState().collectMoney()}
+          onClick={(e) => {
+            e.stopPropagation()
+            useWaterparkStore.getState().collectMoney()
+          }}
           className="absolute bottom-6 right-6 px-5 py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold text-lg shadow-xl pointer-events-auto animate-pulse"
         >
           💰 Collect ${pending.toLocaleString()}
@@ -98,7 +138,7 @@ export function WaterparkUI() {
 
       {/* Bottom build menu */}
       {mode === 'build' && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 bg-black/70 px-3 py-3 rounded-2xl pointer-events-auto max-w-[90vw] overflow-x-auto">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 bg-black/70 px-3 py-3 rounded-2xl pointer-events-auto max-w-[80vw] overflow-x-auto">
           {PIECE_TYPES.map((type) => {
             const def = PIECES[type]
             const owned = cards[type] ?? 0
@@ -107,10 +147,11 @@ export function WaterparkUI() {
             return (
               <button
                 key={type}
-                onClick={() =>
+                onClick={(e) => {
+                  e.stopPropagation()
                   useWaterparkStore.getState().selectPiece(selected ? null : type)
-                }
-                className={`flex flex-col items-center justify-between w-24 px-2 py-2 rounded-xl border-2 transition-colors ${
+                }}
+                className={`flex flex-col items-center justify-between w-24 shrink-0 px-2 py-2 rounded-xl border-2 transition-colors ${
                   selected
                     ? 'border-yellow-400 bg-yellow-400/20'
                     : 'border-transparent bg-white/10 hover:bg-white/20'
@@ -134,18 +175,24 @@ export function WaterparkUI() {
 
       {/* Inventory modal */}
       {showInventory && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-auto bg-black/40">
-          <div className="bg-slate-900 border border-slate-600 rounded-2xl p-6 w-[420px] max-w-[90vw]">
+        <div
+          onClick={closeInventory}
+          className="absolute inset-0 z-40 flex items-center justify-center pointer-events-auto bg-black/40"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-slate-900 border border-slate-600 rounded-2xl p-6 w-[420px] max-w-[90vw]"
+          >
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-white text-xl font-bold">🎒 Building Cards</h2>
               <button
-                onClick={() => useWaterparkStore.getState().toggleInventory()}
+                onClick={closeInventory}
                 className="text-slate-400 hover:text-white text-2xl leading-none"
               >
                 ×
               </button>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto">
               {PIECE_TYPES.map((type) => {
                 const def = PIECES[type]
                 const owned = cards[type] ?? 0
@@ -157,8 +204,8 @@ export function WaterparkUI() {
                     }`}
                   >
                     <span className="text-2xl">{def.icon}</span>
-                    <div className="flex-1">
-                      <div className="text-white text-sm font-semibold">{def.name}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-white text-sm font-semibold truncate">{def.name}</div>
                       <div className="text-slate-400 text-xs">${def.cost}</div>
                     </div>
                     <span className="text-cyan-300 font-bold text-lg">×{owned}</span>
