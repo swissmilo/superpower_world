@@ -11,6 +11,7 @@ import { DropSlide } from './pieces/DropSlide'
 import { BurgerShop } from './pieces/BurgerShop'
 import { Restrooms } from './pieces/Restrooms'
 import { Volcano } from './pieces/Volcano'
+import { GenericSlide } from './pieces/GenericSlide'
 
 function effectiveFootprint(type: PieceType, rot: number): [number, number] {
   const [w, d] = PIECES[type].footprint
@@ -44,7 +45,8 @@ function PieceVisual({
     case 'lazy_river':
       return <LazyRiver worldOffset={worldOffset} rideId={rideId} />
     default:
-      return null
+      // The extra slide variants are all rendered by GenericSlide.
+      return <GenericSlide kind={type} worldOffset={worldOffset} rideId={rideId} />
   }
 }
 

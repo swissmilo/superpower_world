@@ -18,6 +18,17 @@ export type PieceType =
   | 'burger_shop'
   | 'restrooms'
   | 'volcano'
+  // Extra water-slide variants
+  | 'speed_slide'
+  | 'funnel_slide'
+  | 'halfpipe_slide'
+  | 'twister_slide'
+  | 'rainbow_slide'
+  | 'boomerang_slide'
+  | 'tornado_slide'
+  | 'cannonball_slide'
+  | 'python_slide'
+  | 'aqualoop_slide'
 
 export interface PieceDef {
   type: PieceType
@@ -128,6 +139,128 @@ export const PIECES: Record<PieceType, PieceDef> = {
     rideable: false,
     incomePerTick: 2,
     starValue: 5,
+  },
+
+  // ---- Extra water-slide variants (all rideable, routed to GenericSlide) ----
+  speed_slide: {
+    type: 'speed_slide',
+    name: 'Speed Racer',
+    icon: '🏁',
+    color: '#FF3B30',
+    cost: 260,
+    cardCost: 1,
+    footprint: [2, 3],
+    rideable: true,
+    incomePerTick: 6,
+    starValue: 3,
+  },
+  funnel_slide: {
+    type: 'funnel_slide',
+    name: 'Funnel',
+    icon: '🕳️',
+    color: '#9B59B6',
+    cost: 400,
+    cardCost: 1,
+    footprint: [3, 3],
+    rideable: true,
+    incomePerTick: 8,
+    starValue: 4,
+  },
+  halfpipe_slide: {
+    type: 'halfpipe_slide',
+    name: 'Half-Pipe',
+    icon: '🛹',
+    color: '#1ABC9C',
+    cost: 320,
+    cardCost: 1,
+    footprint: [2, 3],
+    rideable: true,
+    incomePerTick: 7,
+    starValue: 4,
+  },
+  twister_slide: {
+    type: 'twister_slide',
+    name: 'Twister',
+    icon: '🌪️',
+    color: '#34D1BF',
+    cost: 360,
+    cardCost: 1,
+    footprint: [2, 2],
+    rideable: true,
+    incomePerTick: 7,
+    starValue: 4,
+  },
+  rainbow_slide: {
+    type: 'rainbow_slide',
+    name: 'Rainbow Racer',
+    icon: '🌈',
+    color: '#FF8AD8',
+    cost: 300,
+    cardCost: 1,
+    footprint: [2, 3],
+    rideable: true,
+    incomePerTick: 6,
+    starValue: 3,
+  },
+  boomerang_slide: {
+    type: 'boomerang_slide',
+    name: 'Boomerang',
+    icon: '🪃',
+    color: '#E67E22',
+    cost: 420,
+    cardCost: 1,
+    footprint: [2, 3],
+    rideable: true,
+    incomePerTick: 9,
+    starValue: 5,
+  },
+  tornado_slide: {
+    type: 'tornado_slide',
+    name: 'Tornado',
+    icon: '🌀',
+    color: '#5DADE2',
+    cost: 460,
+    cardCost: 1,
+    footprint: [3, 3],
+    rideable: true,
+    incomePerTick: 9,
+    starValue: 5,
+  },
+  cannonball_slide: {
+    type: 'cannonball_slide',
+    name: 'Cannonball',
+    icon: '💣',
+    color: '#2C3E50',
+    cost: 380,
+    cardCost: 1,
+    footprint: [2, 2],
+    rideable: true,
+    incomePerTick: 8,
+    starValue: 4,
+  },
+  python_slide: {
+    type: 'python_slide',
+    name: 'Python',
+    icon: '🐍',
+    color: '#27AE60',
+    cost: 340,
+    cardCost: 1,
+    footprint: [2, 3],
+    rideable: true,
+    incomePerTick: 7,
+    starValue: 4,
+  },
+  aqualoop_slide: {
+    type: 'aqualoop_slide',
+    name: 'Aqua Loop',
+    icon: '➿',
+    color: '#F1C40F',
+    cost: 520,
+    cardCost: 2,
+    footprint: [2, 2],
+    rideable: true,
+    incomePerTick: 11,
+    starValue: 6,
   },
 }
 

@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { useGameStore } from './gameStore'
 import {
   PIECES,
   PIECE_TYPES,
@@ -16,7 +17,6 @@ export interface PlacedPiece {
 
 interface WaterparkState {
   mode: 'explore' | 'build'
-  money: number
   stars: number
   cards: Record<PieceType, number>
   placed: PlacedPiece[]
@@ -35,7 +35,7 @@ interface WaterparkState {
   placePiece: (type: PieceType, gx: number, gz: number, rot: number) => boolean
   removePiece: (id: string) => void
 
-  // Economy
+  // Economy (money lives in the shared gameStore currency)
   collectMoney: () => void
   getTotalCards: () => number
   tick: (delta: number) => void
@@ -66,8 +66,15 @@ function starterCards(): Record<PieceType, number> {
   return c
 }
 
+// Shared bank helpers — building draws from / pays into the global currency.
+function bankBalance(): number {
+  return useGameStore.getState().currency
+}
+function bankAdd(amount: number) {
+  useGameStore.setState((s) => ({ currency: s.currency + amount }))
+}
+
 interface SaveData {
-  money: number
   stars: number
   cards: Record<PieceType, number>
   placed: PlacedPiece[]
@@ -79,7 +86,6 @@ let starProgress = 0
 
 export const useWaterparkStore = create<WaterparkState>()((set, get) => ({
   mode: 'explore',
-  money: 400,
   stars: 0,
   cards: starterCards(),
   placed: [],
@@ -122,13 +128,13 @@ export const useWaterparkStore = create<WaterparkState>()((set, get) => ({
 
   placePiece: (type, gx, gz, rot) => {
     const def = PIECES[type]
-    const { money, cards } = get()
-    if (money < def.cost) return false
+    const { cards } = get()
+    if (bankBalance() < def.cost) return false
     if ((cards[type] ?? 0) < def.cardCost) return false
     if (!get().canPlace(type, gx, gz, rot)) return false
 
+    bankAdd(-def.cost)
     set((s) => ({
-      money: s.money - def.cost,
       cards: { ...s.cards, [type]: s.cards[type] - def.cardCost },
       placed: [...s.placed, { id: nextId(), type, gx, gz, rot }],
     }))
@@ -140,19 +146,15 @@ export const useWaterparkStore = create<WaterparkState>()((set, get) => ({
     const piece = get().placed.find((p) => p.id === id)
     if (!piece) return
     const refund = Math.floor(PIECES[piece.type].cost * 0.5)
-    set((s) => ({
-      money: s.money + refund,
-      placed: s.placed.filter((p) => p.id !== id),
-    }))
+    bankAdd(refund)
+    set((s) => ({ placed: s.placed.filter((p) => p.id !== id) }))
     get().save()
   },
 
   collectMoney: () => {
-    set((s) => ({
-      money: s.money + Math.floor(s.pendingMoney),
-      pendingMoney: 0,
-    }))
-    get().save()
+    bankAdd(Math.floor(get().pendingMoney))
+    set({ pendingMoney: 0 })
+    useGameStore.getState().saveGame()
   },
 
   getTotalCards: () => {
@@ -192,8 +194,8 @@ export const useWaterparkStore = create<WaterparkState>()((set, get) => ({
   },
 
   save: () => {
-    const { money, stars, cards, placed } = get()
-    const data: SaveData = { money, stars, cards, placed }
+    const { stars, cards, placed } = get()
+    const data: SaveData = { stars, cards, placed }
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify(data))
     } catch {
@@ -208,7 +210,6 @@ export const useWaterparkStore = create<WaterparkState>()((set, get) => ({
       const data: SaveData = JSON.parse(raw)
       starProgress = data.stars ?? 0
       set({
-        money: data.money ?? 400,
         stars: data.stars ?? 0,
         cards: { ...emptyCards(), ...(data.cards ?? {}) },
         placed: data.placed ?? [],
